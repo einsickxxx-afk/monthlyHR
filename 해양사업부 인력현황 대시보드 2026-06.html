@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>해양사업부 인력현황 대시보드</title>
+<style>
+  :root{
+    --c1:#2F6FED; --c2:#6FA8FF; --c3:#BFD6FF; --c4:#DCE4F0;
+    --dark:#16233F; --bg:#F2F4F7; --card:#FFFFFF; --border:#E4E7EC;
+    --text:#101828; --sub:#667085; --mute:#98A2B3;
+    --pos:#1F9E89; --neg:#E4572E;
+  }
+  *{ margin:0; padding:0; box-sizing:border-box; }
+  html,body{ background:var(--bg); }
+  body{
+    font-family:'Pretendard Variable',Pretendard,-apple-system,BlinkMacSystemFont,'Apple SD Gothic Neo','Malgun Gothic',sans-serif;
+    color:var(--text);
+    padding:28px 32px 60px;
+    max-width:1440px;
+    margin:0 auto;
+    transition:background .25s;
+  }
+
+  /* ===== Header ===== */
+  .header{
+    display:flex; justify-content:space-between; align-items:flex-start;
+    padding-bottom:18px; margin-bottom:20px; border-bottom:2px solid var(--dark);
+    flex-wrap:wrap; gap:16px;
+  }
+  .titlewrap{ display:flex; align-items:flex-start; }
+  .titlewrap .tab{ width:6px; height:36px; background:var(--c1); border-radius:1px; margin-right:12px; transition:background .25s; }
+  .titlewrap h1{ font-size:24px; font-weight:800; color:var(--dark); letter-spacing:-0.4px; }
+  .titlewrap .sub{ font-size:12.5px; color:var(--sub); margin-top:5px; }
+  .meta{ text-align:right; font-size:11.5px; color:var(--mute); line-height:1.7; }
+  .meta b{ color:var(--dark); font-size:12.5px; }
+
+  /* ===== Theme control ===== */
+  .theme-panel{
+    background:var(--card); border:1px solid var(--border); border-radius:10px;
+    padding:12px 16px; display:flex; align-items:center; gap:14px; flex-wrap:wrap;
+    margin-bottom:20px; font-size:12px; color:var(--sub);
+  }
+  .theme-panel .grp{ display:flex; align-items:center; gap:8px; }
+  .theme-panel .label{ font-weight:700; color:var(--dark); margin-right:2px; }
+  .swatch{
+    width:26px; height:26px; border-radius:50%; cursor:pointer; border:2px solid #fff;
+    box-shadow:0 0 0 1.5px var(--border); transition:transform .12s;
+  }
+  .swatch:hover{ transform:scale(1.12); }
+  .divider{ width:1px; height:22px; background:var(--border); }
+  .colorpick{ display:flex; align-items:center; gap:6px; }
+  .colorpick input[type=color]{
+    width:30px; height:30px; border:none; border-radius:7px; cursor:pointer; background:none; padding:0;
+  }
+  .colorpick span{ font-size:11.5px; }
+
+  /* ===== KPI ===== */
+  .kpi-row{ display:flex; gap:14px; margin-bottom:18px; flex-wrap:wrap; }
+  .kpi{
+    flex:1; min-width:220px; background:var(--dark); border-radius:10px; padding:16px 20px; color:#fff;
+    transition:background .25s;
+  }
+  .kpi.alt{ background:var(--card); border:1px solid var(--border); color:var(--text); }
+  .kpi .label{ font-size:11.5px; color:#B7C0D4; font-weight:600; }
+  .kpi.alt .label{ color:var(--sub); }
+  .kpi .value{ font-size:26px; font-weight:800; margin-top:6px; letter-spacing:-0.5px; }
+  .kpi .chip{ display:inline-block; font-size:11.5px; font-weight:700; margin-top:7px; padding:2px 8px; border-radius:11px; }
+  .chip.up{ background:rgba(31,158,137,.2); color:#2CC9A8; }
+  .chip.down{ background:rgba(228,87,46,.2); color:#FF9269; }
+  .kpi.alt .chip.up{ background:#E6F7F2; color:#16876F; }
+  .kpi.alt .chip.down{ background:#FDEDE8; color:#C6431E; }
+
+  /* ===== Grid / Card ===== */
+  .grid{ display:flex; flex-wrap:wrap; gap:14px; }
+  .card{
+    background:var(--card); border:1px solid var(--border); border-radius:10px;
+    padding:18px 20px 20px; box-shadow:0 1px 2px rgba(16,24,40,.04);
+  }
+  .w-half{ width:calc(50% - 7px); }
+  .card-title{ display:flex; align-items:center; margin-bottom:14px; }
+  .card-title .tab{ width:4px; height:15px; border-radius:1px; margin-right:8px; background:var(--c1); transition:background .25s; }
+  .card-title h2{ font-size:14.5px; font-weight:700; color:var(--dark); }
+  .card-title .type{ margin-left:8px; font-size:9.5px; font-weight:800; padding:2px 6px; border-radius:8px; color:#fff; letter-spacing:.3px; }
+  .type.bar{ background:var(--c1); } .type.pie{ background:#7C5FD1; } .type.tbl{ background:var(--pos); }
+  .card-title .note{ margin-left:auto; font-size:10.5px; color:var(--mute); }
+
+  .barrow{ display:flex; align-items:center; margin-bottom:10px; }
+  .barrow .name{ width:118px; font-size:12px; color:#475467; flex-shrink:0; }
+  .barrow .track{ flex:1; background:#F0F2F5; border-radius:4px; height:16px; position:relative; margin-right:10px; }
+  .barrow .fill{ position:absolute; left:0; top:0; height:100%; border-radius:4px; background:var(--c1); transition:background .25s,width .4s; }
+  .barrow .num{ width:60px; font-size:12px; font-weight:700; color:var(--dark); text-align:right; }
+  .refline{ position:absolute; top:-4px; bottom:-4px; width:2px; background:var(--neg); }
+  .reflabel{ font-size:10px; color:var(--neg); text-align:right; margin-top:2px; }
+
+  table.tbl{ width:100%; border-collapse:collapse; font-size:12px; }
+  table.tbl th{ text-align:left; color:var(--mute); font-weight:700; font-size:10.5px; padding:6px 8px; border-bottom:1px solid var(--border); }
+  table.tbl th.num, table.tbl td.num{ text-align:right; }
+  table.tbl td{ padding:8px 8px; border-bottom:1px solid #F0F2F5; color:#344054; }
+  table.tbl tr:last-child td{ border-bottom:none; }
+  table.tbl tr.total td{ font-weight:800; color:var(--dark); background:#F7F9FC; }
+  .tag{ font-size:10px; font-weight:700; padding:2px 7px; border-radius:9px; }
+  .tag.leave{ background:#FDF3E7; color:#B7791F; }
+  .tag.retire{ background:#FDEDE8; color:#C6431E; }
+
+  .donutwrap{ display:flex; align-items:center; }
+  .donutwrap svg{ flex-shrink:0; margin-right:20px; }
+  .donut-legend{ flex:1; }
+  .donut-legend .row{ display:flex; align-items:center; font-size:12px; color:#475467; padding:6px 0; border-bottom:1px dashed #EEF1F5; }
+  .donut-legend .row:last-child{ border-bottom:none; }
+  .donut-legend i{ width:10px; height:10px; border-radius:2px; margin-right:8px; flex-shrink:0; }
+  .donut-legend b{ margin-left:auto; color:var(--dark); font-size:12.5px; }
+  .donut-legend .pct{ width:38px; text-align:right; color:var(--mute); font-size:10.5px; margin-left:8px; }
+
+  .miniflow{ display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; padding:12px 14px; background:#F7F9FC; border-radius:8px; }
+  .miniflow .num{ font-size:22px; font-weight:800; color:var(--dark); }
+  .miniflow .lab{ font-size:11px; color:var(--sub); margin-top:2px; }
+  .miniflow .arrow{ font-size:18px; color:var(--mute); margin:0 10px; }
+  .miniflow .diff{ font-size:12px; font-weight:700; padding:3px 9px; border-radius:10px; }
+
+  .footer{ margin-top:20px; font-size:10.5px; color:var(--mute); text-align:center; }
+
+  @media (max-width:900px){ .w-half{ width:100%; } }
+</style>
+</head>
+<body>
+
+  <div class="header">
+    <div class="titlewrap">
+      <span class="tab"></span>
+      <div>
+        <h1>해양사업부 인력현황 대시보드</h1>
+        <div class="sub">Ocean Business Division · Workforce Status Dashboard</div>
+      </div>
+    </div>
+    <div class="meta">기준일 <b>2026-06-30</b> · 전월(05-31) 대비 비교<br>재직인원 기준 · 작성 HRBP</div>
+  </div>
+
+  <div class="theme-panel">
+    <span class="label">색상 테마</span>
+    <div class="grp">
+      <div class="swatch" style="background:#2F6FED" onclick="setTheme('#2F6FED','#6FA8FF','#BFD6FF','#DCE4F0','#16233F')" title="네이비 블루"></div>
+      <div class="swatch" style="background:#1F9E89" onclick="setTheme('#1F9E89','#5BC2AE','#A7E0D4','#DFF3EE','#123B33')" title="포레스트 틸"></div>
+      <div class="swatch" style="background:#7C5FD1" onclick="setTheme('#7C5FD1','#A98BE0','#C9B5EE','#EDE6FA','#2E2350')" title="그레이프 바이올렛"></div>
+      <div class="swatch" style="background:#E4572E" onclick="setTheme('#E4572E','#F08A5D','#F6B99B','#FBE3D3','#5B2A18')" title="선셋 웜"></div>
+    </div>
+    <div class="divider"></div>
+    <div class="grp">
+      <div class="colorpick">
+        <span>직접 지정</span>
+        <input type="color" id="customColor" value="#2F6FED" oninput="setCustom(this.value)">
+      </div>
+    </div>
+    <div class="divider"></div>
+    <span style="font-size:11px;">차트 색상이 대시보드 전체에 즉시 반영됩니다</span>
+  </div>
+
+  <div class="kpi-row">
+    <div class="kpi">
+      <div class="label">전체 재직 인원</div>
+      <div class="value">334명</div>
+      <span class="chip down">▼ 2명 (전월 336명)</span>
+    </div>
+    <div class="kpi alt">
+      <div class="label">이번 달 발령 · 변동</div>
+      <div class="value">2건</div>
+      <span class="chip down">퇴직 1 · 휴직 1</span>
+    </div>
+    <div class="kpi alt">
+      <div class="label">사외파견 인원</div>
+      <div class="value">13명</div>
+      <span class="chip up">총원 대비 3.9%</span>
+    </div>
+    <div class="kpi">
+      <div class="label">사업부 평균 근속연수</div>
+      <div class="value">10.06년</div>
+      <span class="chip up">그룹입사일 기준 · 임원 제외</span>
+    </div>
+  </div>
+
+  <div class="grid">
+
+    <!-- 인력증감내역 -->
+    <div class="card w-half">
+      <div class="card-title"><span class="tab"></span><h2>인력증감내역</h2><span class="type bar">FLOW</span><span class="note">'26.05.31 → '26.06.30</span></div>
+      <div class="miniflow">
+        <div><div class="num">336명</div><div class="lab">전월 인원(05/31)</div></div>
+        <div class="arrow">→</div>
+        <div><div class="num">334명</div><div class="lab">당월 인원(06/30)</div></div>
+        <div class="diff chip down" style="background:#FDEDE8;color:#C6431E;">▼ 2명</div>
+      </div>
+      <div class="barrow"><div class="name">채용</div><div class="track"><div class="fill" style="width:2%"></div></div><div class="num">0명</div></div>
+      <div class="barrow"><div class="name">복직</div><div class="track"><div class="fill" style="width:2%"></div></div><div class="num">0명</div></div>
+      <div class="barrow"><div class="name">전입</div><div class="track"><div class="fill" style="width:2%"></div></div><div class="num">0명</div></div>
+      <div class="barrow"><div class="name">퇴직</div><div class="track"><div class="fill" style="width:20%; background:var(--neg)"></div></div><div class="num">-1명</div></div>
+      <div class="barrow"><div class="name">휴직</div><div class="track"><div class="fill" style="width:20%; background:var(--neg)"></div></div><div class="num">-1명</div></div>
+      <div class="barrow"><div class="name">전출</div><div class="track"><div class="fill" style="width:2%"></div></div><div class="num">0명</div></div>
+    </div>
+
+    <!-- 발령 변동사항 -->
+    <div class="card w-half">
+      <div class="card-title"><span class="tab" style="background:var(--pos)"></span><h2>발령 변동사항</h2><span class="type tbl">TABLE</span><span class="note">2026년 6월</span></div>
+      <table class="tbl">
+        <tr><th>성명</th><th>직위</th><th>소속부서</th><th>구분</th><th>일자</th></tr>
+        <tr><td>조민규</td><td>연구원</td><td>무인체계팀</td><td><span class="tag retire">퇴직</span></td><td>06.17</td></tr>
+        <tr><td>최종필</td><td>전문위원</td><td>해양연구소</td><td><span class="tag leave">직무외상병휴직</span></td><td>06.01</td></tr>
+      </table>
+      <div style="margin-top:14px; font-size:11px; color:var(--sub); line-height:1.7;">
+        · 향후 3개월 내 복직 예정 1명 (최종필 전문위원, '26.08.31)<br>
+        · 향후 3개월 내 계약 종료 1명 (최종필 전문위원, '26.08.31)
+      </div>
+    </div>
+
+    <!-- 부서별 인원현황 -->
+    <div class="card w-half">
+      <div class="card-title"><span class="tab"></span><h2>부서별 인원현황</h2><span class="type bar">BAR</span><span class="note">원소속부서 기준(팀 단위) · 총 334명</span></div>
+      <div class="barrow"><div class="name">해양SW1팀</div><div class="track"><div class="fill" style="width:100%"></div></div><div class="num">58명</div></div>
+      <div class="barrow"><div class="name">해양시스템1팀</div><div class="track"><div class="fill" style="width:76%"></div></div><div class="num">44명</div></div>
+      <div class="barrow"><div class="name">무인체계팀</div><div class="track"><div class="fill" style="width:67%"></div></div><div class="num">39명</div></div>
+      <div class="barrow"><div class="name">해양SW2팀</div><div class="track"><div class="fill" style="width:60%"></div></div><div class="num">35명</div></div>
+      <div class="barrow"><div class="name">해양시스템4팀</div><div class="track"><div class="fill" style="width:52%"></div></div><div class="num">30명</div></div>
+      <div class="barrow"><div class="name">해양시스템3팀</div><div class="track"><div class="fill" style="width:43%"></div></div><div class="num">25명</div></div>
+      <div class="barrow"><div class="name">해양사업단</div><div class="track"><div class="fill" style="width:33%"></div></div><div class="num">19명</div></div>
+      <div class="barrow"><div class="name">해양시스템2팀</div><div class="track"><div class="fill" style="width:33%"></div></div><div class="num">19명</div></div>
+      <div class="barrow"><div class="name">해양시스템5팀</div><div class="track"><div class="fill" style="width:31%"></div></div><div class="num">18명</div></div>
+      <div class="barrow"><div class="name">SBS체계팀</div><div class="track"><div class="fill" style="width:26%"></div></div><div class="num">15명</div></div>
+      <div class="barrow"><div class="name">해양사업전략팀</div><div class="track"><div class="fill" style="width:17%"></div></div><div class="num">10명</div></div>
+      <div class="barrow"><div class="name">SV사업팀</div><div class="track"><div class="fill" style="width:17%"></div></div><div class="num">10명</div></div>
+      <div class="barrow"><div class="name">소나개발팀</div><div class="track"><div class="fill" style="width:16%"></div></div><div class="num">9명</div></div>
+      <div class="legend" style="margin-top:10px; font-size:11px; color:var(--sub);">해양연구소 230명(68.9%) · SV사업센터 65명(19.5%) · 직속조직 39명(11.7%) · 위 13개 실무팀 외 조직장 직속인원 3명 별도</div>
+    </div>
+
+    <!-- 직급/직군별 인원 현황 -->
+    <div class="card w-half">
+      <div class="card-title"><span class="tab" style="background:#7C5FD1"></span><h2>직군별 인원 현황</h2><span class="type pie">PIE</span><span class="note">총 334명</span></div>
+      <div class="donutwrap">
+        <svg width="140" height="140" viewBox="0 0 140 140">
+          <circle cx="70" cy="70" r="50" fill="none" stroke="#EEF1F5" stroke-width="19"/>
+          <circle id="d1s1" cx="70" cy="70" r="50" fill="none" style="stroke:var(--c1)" stroke-width="19" stroke-dasharray="272.3 314.2" stroke-dashoffset="0" transform="rotate(-90 70 70)"/>
+          <circle id="d1s2" cx="70" cy="70" r="50" fill="none" style="stroke:var(--c2)" stroke-width="19" stroke-dasharray="23.6 314.2" stroke-dashoffset="-272.3" transform="rotate(-90 70 70)"/>
+          <circle id="d1s3" cx="70" cy="70" r="50" fill="none" style="stroke:var(--c3)" stroke-width="19" stroke-dasharray="9.4 314.2" stroke-dashoffset="-295.9" transform="rotate(-90 70 70)"/>
+          <circle id="d1s4" cx="70" cy="70" r="50" fill="none" style="stroke:var(--c4)" stroke-width="19" stroke-dasharray="9.4 314.2" stroke-dashoffset="-305.3" transform="rotate(-90 70 70)"/>
+          <text x="70" y="66" text-anchor="middle" font-size="19" font-weight="800" fill="var(--dark)">334</text>
+          <text x="70" y="83" text-anchor="middle" font-size="9.5" fill="var(--mute)">총원(명)</text>
+        </svg>
+        <div class="donut-legend">
+          <div class="row"><i style="background:var(--c1)"></i>R직군(연구개발)<span class="pct">86.5%</span><b>289명</b></div>
+          <div class="row"><i style="background:var(--c2)"></i>S직군(영업)<span class="pct">7.5%</span><b>25명</b></div>
+          <div class="row"><i style="background:var(--c3)"></i>A직군(경영지원)<span class="pct">3.0%</span><b>10명</b></div>
+          <div class="row"><i style="background:var(--c4)"></i>계약직<span class="pct">3.0%</span><b>10명</b></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 조직별 학력사항 -->
+    <div class="card w-half">
+      <div class="card-title"><span class="tab" style="background:var(--pos)"></span><h2>조직별 학력사항</h2><span class="type tbl">TABLE</span><span class="note">조직 × 최종학력</span></div>
+      <table class="tbl">
+        <tr><th>조직명</th><th class="num">박사</th><th class="num">석사</th><th class="num">학사</th><th class="num">계</th></tr>
+        <tr><td>직속조직</td><td class="num">3</td><td class="num">18</td><td class="num">18</td><td class="num">39</td></tr>
+        <tr><td>해양연구소</td><td class="num">9</td><td class="num">75</td><td class="num">146</td><td class="num">230</td></tr>
+        <tr><td>SV사업센터</td><td class="num">8</td><td class="num">31</td><td class="num">26</td><td class="num">65</td></tr>
+        <tr class="total"><td>합계</td><td class="num">20</td><td class="num">124</td><td class="num">190</td><td class="num">334</td></tr>
+      </table>
+    </div>
+
+    <!-- 사외파견 인원 현황 -->
+    <div class="card w-half">
+      <div class="card-title"><span class="tab" style="background:#7C5FD1"></span><h2>사외파견 인원 현황</h2><span class="type pie">PIE</span><span class="note">총 13명 · 총원 대비 3.9%</span></div>
+      <div class="donutwrap">
+        <svg width="140" height="140" viewBox="0 0 140 140">
+          <circle cx="70" cy="70" r="50" fill="none" stroke="#EEF1F5" stroke-width="19"/>
+          <circle cx="70" cy="70" r="50" fill="none" style="stroke:var(--c1)" stroke-width="19" stroke-dasharray="193.4 314.2" stroke-dashoffset="0" transform="rotate(-90 70 70)"/>
+          <circle cx="70" cy="70" r="50" fill="none" style="stroke:var(--c3)" stroke-width="19" stroke-dasharray="120.8 314.2" stroke-dashoffset="-193.4" transform="rotate(-90 70 70)"/>
+          <text x="70" y="66" text-anchor="middle" font-size="19" font-weight="800" fill="var(--dark)">13</text>
+          <text x="70" y="83" text-anchor="middle" font-size="9.5" fill="var(--mute)">파견인원(명)</text>
+        </svg>
+        <div class="donut-legend">
+          <div class="row"><i style="background:var(--c1)"></i>부산 (대형수송함 1번함)<span class="pct">62%</span><b>8명</b></div>
+          <div class="row"><i style="background:var(--c3)"></i>울산 (필리핀 원해경비함)<span class="pct">38%</span><b>5명</b></div>
+        </div>
+        <div style="font-size:11px; color:var(--sub); margin-top:10px;">향후 3개월 내 파견 종료 인원 없음</div>
+      </div>
+    </div>
+
+    <!-- 팀별 평균 근속 연수 -->
+    <div class="card w-half">
+      <div class="card-title"><span class="tab"></span><h2>팀별 평균 근속 연수</h2><span class="type bar">BAR</span><span class="note">그룹입사일 기준 · 임원 제외</span></div>
+      <div class="barrow"><div class="name">소나개발팀</div><div class="track"><div class="fill" style="width:100%; background:var(--pos)"></div></div><div class="num">14.75년</div></div>
+      <div class="barrow"><div class="name">해양시스템2팀</div><div class="track"><div class="fill" style="width:89%; background:var(--pos)"></div></div><div class="num">13.16년</div></div>
+      <div class="barrow"><div class="name">해양사업단</div><div class="track"><div class="fill" style="width:87%; background:var(--pos)"></div></div><div class="num">12.89년</div></div>
+      <div class="barrow"><div class="name">해양시스템4팀</div><div class="track"><div class="fill" style="width:76%; background:var(--pos)"></div></div><div class="num">11.23년</div></div>
+      <div class="barrow"><div class="name">해양시스템1팀</div><div class="track"><div class="fill" style="width:71%; background:var(--pos)"></div></div><div class="num">10.45년</div></div>
+      <div class="barrow"><div class="name">해양시스템3팀</div><div class="track"><div class="fill" style="width:69%; background:var(--pos)"></div></div><div class="num">10.20년</div></div>
+      <div class="barrow"><div class="name">해양SW1팀</div><div class="track"><div class="fill" style="width:69%; background:var(--pos)"></div></div><div class="num">10.16년</div></div>
+      <div class="barrow"><div class="name">SV사업팀</div><div class="track"><div class="fill" style="width:67%; background:var(--pos)"></div></div><div class="num">9.90년</div></div>
+      <div class="barrow"><div class="name">해양SW2팀</div><div class="track"><div class="fill" style="width:66%; background:var(--pos)"></div></div><div class="num">9.77년</div></div>
+      <div class="barrow"><div class="name">해양사업전략팀</div><div class="track"><div class="fill" style="width:60%; background:var(--pos)"></div></div><div class="num">8.90년</div></div>
+      <div class="barrow"><div class="name">해양시스템5팀</div><div class="track"><div class="fill" style="width:59%; background:var(--pos)"></div></div><div class="num">8.72년</div></div>
+      <div class="barrow"><div class="name">무인체계팀</div><div class="track"><div class="fill" style="width:50%; background:var(--pos)"></div></div><div class="num">7.38년</div></div>
+      <div class="barrow"><div class="name">SBS체계팀</div><div class="track"><div class="fill" style="width:42%; background:var(--pos)"></div></div><div class="num">6.27년</div></div>
+      <div style="font-size:11px; color:var(--neg); margin-top:6px; font-weight:700;">사업부 평균 10.06년 ─ ─ ─</div>
+    </div>
+
+    <!-- 근속연수별 인원 현황 -->
+    <div class="card w-half">
+      <div class="card-title"><span class="tab"></span><h2>근속연수별 인원 현황</h2><span class="type bar">BAR</span><span class="note">그룹입사일 기준 구간 · 총 329명</span></div>
+      <div class="barrow"><div class="name">0~4년</div><div class="track"><div class="fill" style="width:100%"></div></div><div class="num">108명</div></div>
+      <div class="barrow"><div class="name">5~9년</div><div class="track"><div class="fill" style="width:67%"></div></div><div class="num">72명</div></div>
+      <div class="barrow"><div class="name">10~14년</div><div class="track"><div class="fill" style="width:49%"></div></div><div class="num">49명</div></div>
+      <div class="barrow"><div class="name">15~19년</div><div class="track"><div class="fill" style="width:49%"></div></div><div class="num">53명</div></div>
+      <div class="barrow"><div class="name">20~24년</div><div class="track"><div class="fill" style="width:23%"></div></div><div class="num">25명</div></div>
+      <div class="barrow"><div class="name">25년 이상</div><div class="track"><div class="fill" style="width:20%"></div></div><div class="num">22명</div></div>
+      <div class="legend" style="margin-top:10px; font-size:11px; color:var(--sub);">0~4년 33% · 5~9년 22% · 10~14년 15% · 15~19년 16% · 20~24년 7% · 25년이상 7%</div>
+    </div>
+
+  </div>
+
+  <div class="footer">'26.06.30 기준 해양사업부 인력현황 보고 원자료(엑셀) 반영 · 색상 테마는 상단 패널에서 변경 가능 · 총원 334명은 이미 휴직 인원(6명)을 제외한 재직 기준이며, 근속연수 통계 329명은 여기서 임원·고문 5명을 추가로 제외한 수치입니다</div>
+
+<script>
+function hexToRgb(hex){
+  hex = hex.replace('#','');
+  return [parseInt(hex.substring(0,2),16), parseInt(hex.substring(2,4),16), parseInt(hex.substring(4,6),16)];
+}
+function rgbToHex(r,g,b){
+  return '#' + [r,g,b].map(v => Math.max(0,Math.min(255,Math.round(v))).toString(16).padStart(2,'0')).join('');
+}
+function mix(hex, target, amount){
+  const [r,g,b] = hexToRgb(hex);
+  const [tr,tg,tb] = hexToRgb(target);
+  return rgbToHex(r+(tr-r)*amount, g+(tg-g)*amount, b+(tb-b)*amount);
+}
+function setTheme(c1,c2,c3,c4,dark){
+  const root = document.documentElement.style;
+  root.setProperty('--c1', c1);
+  root.setProperty('--c2', c2);
+  root.setProperty('--c3', c3);
+  root.setProperty('--c4', c4);
+  root.setProperty('--dark', dark);
+  document.getElementById('customColor').value = c1;
+}
+function setCustom(hex){
+  const c2 = mix(hex, '#FFFFFF', 0.35);
+  const c3 = mix(hex, '#FFFFFF', 0.62);
+  const c4 = mix(hex, '#FFFFFF', 0.85);
+  const dark = mix(hex, '#000000', 0.55);
+  setTheme(hex, c2, c3, c4, dark);
+}
+</script>
+
+</body>
+</html>

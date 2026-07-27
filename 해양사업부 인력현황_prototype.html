@@ -480,45 +480,30 @@ function renderAllFromCurrent(){
 }
 
 function renderDeptCard(active){
-  const execs = active.filter(isExec);
-  const staff = active.filter(r => !isExec(r));
-
   const groupData = {};
   GROUP_ORDER.forEach(g => groupData[g] = {});
-  staff.forEach(r => {
+  active.forEach(r => {
     const g = groupOf(r['원소속부서']);
     if(!groupData[g]) groupData[g] = {};
     const org = r['원소속부서'];
     groupData[g][org] = (groupData[g][org]||0) + 1;
   });
 
-  const maxVal = Math.max(1, ...Object.values(groupData).flatMap(o => Object.values(o)));
   const [c1,c2] = themeColors();
   const groupColor = { '직속조직': c1, '해양연구소': mix(c1,'#000000',0.32), 'SV사업센터': c2 };
 
   let html = '';
   GROUP_ORDER.forEach(g => {
-    const entries = Object.entries(groupData[g] || {}).sort((a,b)=>b[1]-a[1]);
+    const entries = Object.entries(groupData[g] || {}).sort((a,b)=> a[0].localeCompare(b[0],'ko'));
     if(entries.length === 0) return;
     const subtotal = entries.reduce((a,[,v])=>a+v,0);
     html += `<div class="dept-group-head"><span>${g}</span><b>${subtotal}명</b></div>`;
-    entries.forEach(([label,value]) => {
-      const pct = Math.round(value/staff.length*100);
-      const pctW = Math.max(2, Math.round(value/maxVal*100));
-      html += `<div class="barrow">
-        <div class="name">${label}</div>
-        <div class="track"><div class="fill" style="width:${pctW}%; background:${groupColor[g]}"></div></div>
-        <div class="num">${value}명 <span style="color:var(--mute);font-weight:500;">(${pct}%)</span></div>
-      </div>`;
-    });
+    html += `<div class="dept-tile-grid">` + entries.map(([label,value]) => `
+      <div class="dept-tile" style="border-left-color:${groupColor[g]}">
+        <div class="dept-tile-count">${value}<span>명</span></div>
+        <div class="dept-tile-name">${label}</div>
+      </div>`).join('') + `</div>`;
   });
-
-  if(execs.length){
-    html += `<div class="dept-group-head" style="margin-top:12px;"><span>임원</span><b>${execs.length}명</b></div>`;
-    html += `<div class="exec-list">` + execs.map(r =>
-      `<span class="exec-chip">${r['성명']} · ${r['직위코드명']}<i>${r['원소속부서']}</i></span>`
-    ).join('') + `</div>`;
-  }
 
   document.getElementById('deptContent').innerHTML = html;
 
@@ -527,7 +512,7 @@ function renderDeptCard(active){
   document.getElementById('deptNote').textContent =
     GROUP_ORDER.filter(g=>groupCounts[g]).map(g => `${g} ${groupCounts[g]}명`).join(' · ');
 }
-
+  
 function renderJobCard(active){
   const counts = {};
   active.forEach(r => { const f = jobFamily(r['직급코드'], r['원소속부서']); counts[f] = (counts[f]||0)+1; });

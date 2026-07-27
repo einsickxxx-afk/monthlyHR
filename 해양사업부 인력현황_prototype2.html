@@ -630,15 +630,9 @@ function buildAvgFooter(tenures){
 /* ===================================================================
    5. 전월/당월 비교 카드 (인력증감내역 · 발령 변동사항)
    =================================================================== */
-function guessCurrentYearMonth(rows){
-  const counts = {};
-  rows.forEach(r => {
-    const digits = (r['입사일']||'').replace(/[^0-9]/g,'');
-    if(digits.length>=6){ const ym = digits.slice(0,6); counts[ym] = (counts[ym]||0)+1; }
-  });
-  let best=null, bestCount=0;
-  Object.entries(counts).forEach(([ym,c]) => { if(c>bestCount){ best=ym; bestCount=c; } });
-  return best;
+function guessCurrentYearMonth(){
+  const d = baseDate();
+  return String(d.getFullYear()) + String(d.getMonth()+1).padStart(2,'0');
 }
 function classifyNewcomer(row, currentYM){
   const digits = (row['입사일']||'').replace(/[^0-9]/g,'');
@@ -654,7 +648,7 @@ function renderComparison(){
   const prevRows = state.prev, currRows = state.curr;
   const prevMap = new Map(prevRows.map(r => [r['사번'], r]));
   const currMap = new Map(currRows.map(r => [r['사번'], r]));
-  const currentYM = guessCurrentYearMonth(currRows);
+  const currentYM = guessCurrentYearMonth();
 
   const flow = { 채용:0, 복직:0, 전입:0, 퇴직:0, 휴직:0, 전출:0 };
   const flowNames = { 채용:[], 복직:[], 전입:[], 퇴직:[], 휴직:[], 전출:[] };

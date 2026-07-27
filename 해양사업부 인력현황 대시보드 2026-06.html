@@ -119,6 +119,13 @@
 
   .footer{ margin-top:20px; font-size:10.5px; color:var(--mute); text-align:center; }
 
+  /* 세로 막대 그래프_vbar */
+  .vbar-wrap{ display:flex; align-items:flex-end; justify-content:space-between; height:150px; margin-top:6px; padding:0 4px; }
+  .vbar-col{ display:flex; flex-direction:column; align-items:center; flex:1; }
+  .vbar-track{ width:32px; height:110px; display:flex; align-items:flex-end; }
+  .vbar-fill{ width:100%; border-radius:4px 4px 0 0; background:var(--c1); transition:height .35s, background .25s; min-height:2px; }
+  .vbar-fill.neg{ background:var(--neg); }
+  
   @media (max-width:900px){ .w-half{ width:100%; } }
 </style>
 </head>

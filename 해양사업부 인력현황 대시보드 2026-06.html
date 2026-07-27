@@ -199,20 +199,54 @@
 
     <!-- 인력증감내역 -->
     <div class="card w-half">
-      <div class="card-title"><span class="tab"></span><h2>인력증감내역</h2><span class="type bar">FLOW</span><span class="note">'26.05.31 → '26.06.30</span></div>
-      <div class="miniflow">
-        <div><div class="num">336명</div><div class="lab">전월 인원(05/31)</div></div>
-        <div class="arrow">→</div>
-        <div><div class="num">334명</div><div class="lab">당월 인원(06/30)</div></div>
-        <div class="diff chip down" style="background:#FDEDE8;color:#C6431E;">▼ 2명</div>
+      <div class="card-title">
+        <span class="tab"></span><h2>인력증감내역</h2><span class="type bar">FLOW</span>
+        <div class="csv-upload">
+          <label for="flowCsv">CSV업로드</label>
+          <input type="file" if="flowCsv" accept=".csv" onchange="handleFlowCsv(this.files[0])">
+          <span class="fname" id="flowFname">예시 데이터</span>
+        </div>
       </div>
-      <div class="barrow"><div class="name">채용</div><div class="track"><div class="fill" style="width:2%"></div></div><div class="num">0명</div></div>
-      <div class="barrow"><div class="name">복직</div><div class="track"><div class="fill" style="width:2%"></div></div><div class="num">0명</div></div>
-      <div class="barrow"><div class="name">전입</div><div class="track"><div class="fill" style="width:2%"></div></div><div class="num">0명</div></div>
-      <div class="barrow"><div class="name">퇴직</div><div class="track"><div class="fill" style="width:20%; background:var(--neg)"></div></div><div class="num">-1명</div></div>
-      <div class="barrow"><div class="name">휴직</div><div class="track"><div class="fill" style="width:20%; background:var(--neg)"></div></div><div class="num">-1명</div></div>
-      <div class="barrow"><div class="name">전출</div><div class="track"><div class="fill" style="width:2%"></div></div><div class="num">0명</div></div>
-    </div>
+
+      <div class="miniflow">
+        <div><div class="num" id="flowPrev"> 336명</div><div class="lab">전월 인원(05/31)</div></div>
+        <div class="arrow">-></div>
+        <div><div class="num" id="flowCurr">334명</div><div class="lab">당월 인원(06/30)</div></div>
+        <div class="diff chip down" id="flowDiff" style="background:#FDEDE8;color:#C6431E;">▼ 2명</div>
+      </div>
+
+      <div class="vbar-wrap" id="flowBars">
+        <div class="vbar-col">
+          <div class="vbar-track"><div class="vbar-fill" id="bar-채용" style="height:2%"></div></div>
+          <div class="vbar-value" id="val-채용">0</div>
+          <div class="vbar-label">채용</div>
+        </div>
+        <div class="vbar-col">
+          <div class="vbar-track"><div class="vbar-fill" id="bar-복직" style="height:2%"></div></div>
+          <div class="vbar-value" id="val-복직">0</div>
+          <div class="vbar-label">복직</div>
+        </div>
+        <div class="vbar-col">
+          <div class="vbar-track"><div class="vbar-fill" id="bar-전입" style="height:2%"></div></div>
+          <div class="vbar-value" id="val-전입">0</div>
+          <div class="vbar-label">전입</div>
+        </div>
+        <div class="vbar-col">
+          <div class="vbar-track"><div class="vbar-fill" id="bar-퇴직" style="height:20%"></div></div>
+          <div class="vbar-value" id="val-퇴직">-1</div>
+          <div class="vbar-label">퇴직</div>
+        </div>
+        <div class="vbar-col">
+          <div class="vbar-track"><div class="vbar-fill" id="bar-휴직" style="height:20%"></div></div>
+          <div class="vbar-value" id="val-휴직">-1</div>
+          <div class="vbar-label">휴직</div>
+        </div>
+         <div class="vbar-col">
+          <div class="vbar-track"><div class="vbar-fill" id="bar-전출" style="height:20%"></div></div>
+          <div class="vbar-value" id="val-전출">-1</div>
+          <div class="vbar-label">전출</div>
+        </div>
+          
 
     <!-- 발령 변동사항 -->
     <div class="card w-half">

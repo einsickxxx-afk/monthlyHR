@@ -109,6 +109,21 @@
   .vbar-value{ font-size:11.5px; font-weight:700; color:var(--dark); margin-top:6px; }
   .vbar-label{ font-size:11px; color:var(--sub); margin-top:2px; }
 
+  .dept-group-head{ display:flex; justify-content:space-between; align-items:center; font-size:11.5px; font-weight:800; color:var(--dark); margin:10px 0 6px; padding-bottom:4px; border-bottom:1px solid var(--border); }
+  .dept-group-head:first-child{ margin-top:0; }
+  .dept-group-head b{ color:var(--mute); font-weight:700; font-size:11px; }
+  .exec-list{ display:flex; flex-wrap:wrap; gap:6px; }
+  .exec-chip{ font-size:11px; background:F7F9FC; border:1px solid var(--border); border-radius:8px; padding:5px 9px; color:var(--dark); font-weight:600; }
+  .exec-chip i{ font-style:normal; color:var(--mute); font-weight:500; margin-left:5px; }
+
+  .donutwrap-centered{ display:flex; flex-direction:column; align-items:center; gap:16px; }
+  .donut-legend-grid{ display:grid; grid-template-columns:1fr 1fr; gap:8px 18px; width:100%; }
+  .donut-item{ display:flex; align-items:center; font-size:12px; color:#475467; gap:6px; }
+  .donut-item i{ width:10px; height:10px; border-radius:2px; flex-shrink:0; }
+  .dl-label{ flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .dl-value{ font-weight:700; color:var(--dark); font-size:12px; }
+  .dl-pct{ color:var(--mute); font-size:10.5px; width:32px; text-align:right; }
+
   table.tbl{ width:100%; border-collapse:collapse; font-size:12px; }
   table.tbl th{ text-align:left; color:var(--mute); font-weight:700; font-size:10.5px; padding:6px 8px; border-bottom:1px solid var(--border); }
   table.tbl th.num, table.tbl td.num{ text-align:right; }
@@ -292,15 +307,22 @@ function groupOf(org){
 }
 const EXEC_TITLES = ['임원','상무','전무','부사장'];
 function isExec(row){ return EXEC_TITLES.includes(row['직위코드명']); }
-function jobFamily(code){
+function jobFamily(code, org){
   const p = (code || '')[0];
   if(p === 'R') return 'R직군(연구개발)';
   if(p === 'S') return 'S직군(영업)';
   if(p === 'A') return 'A직군(경영지원)';
-  if(p === 'G') return '계약직';
+  if(p === 'VP'|'jED'|'MD') return '임원';
+  if(p === 'G') return{
+    if(/해양사업단|Smart Vessel사업팀/.test(org||'')) return 'S직군(영업)';
+    if(/해양연구소|해양시스템1팀|해양시스템2팀|해양시스템3팀|해양시스템4팀|해양시스템5팀|해양SW1팀|해양SW2팀|Smart Battleship체계팀|무인체계팀/.test(org||'')) return 'R직군(연구개발)';
+    if(/해양사업전략팀/.test(org||'')) return 'A직군(경영지원)';
+    return '계약직(기타)';
+  }
   return '기타';
 }
-
+const GROUP_ORDER = ['직속조직', '해양연구소', 'SV사업센터'];
+  
 /* ===================================================================
    1. 색상 테마
    =================================================================== */
@@ -409,8 +431,18 @@ function renderDonut(containerId, data, centerLabel){
     <text x="75" y="71" text-anchor="middle" font-size="22" font-weight="700" fill="${getComputedStyle(document.documentElement).getPropertyValue('--dark')}">${total}</text>
     <text x="75" y="89" text-anchor="middle" font-size="10.5" fill="#98A2B3">${centerLabel}</text>
   </svg>`;
-  const legend = data.map(d => `<div class="row"><i style="background:${d.color}"></i>${d.label}<span class="pct">${total ? Math.round(d.value/total*100) : 0}%</span><b>${d.value}명</b></div>`).join('');
-  document.getElementById(containerId).innerHTML = `<div class="donutwrap">${svg}<div class="donut-legend">${legend}</div></div>`;
+  const legend = data.map(d => `
+  <div class="donut-item">
+    <i style="background:${d.color}"></i>
+    <span class="dl-label">${d.label}</span>
+    <span class="dl-value">${d.value}명</span>
+    <span class="dl-pct">${total ? Math.round(d.value/total*100) : 0}%</span>
+  </div>`).join('')
+  document.getElementById(containerId).innerHTML = `
+    <div class="donutwrap-centered">
+      <div class="donut-chart">${svg}</div>
+      <div class="donut-legend-grid">${legend}</div>
+    </div>`;
 }
 
 function donutPalette(n){
@@ -458,12 +490,12 @@ function renderDeptCard(active){
 
 function renderJobCard(active){
   const counts = {};
-  active.forEach(r => { const f = jobFamily(r['직급코드']); counts[f] = (counts[f]||0)+1; });
+  active.forEach(r => { const f = jobFamily(r['직급코드'], r['원소속부서']); counts[f] = (counts[f]||0)+1; });
   const labels = Object.keys(counts);
   const colors = donutPalette(labels.length);
   const data = labels.map((label,i) => ({ label, value: counts[label], color: colors[i] }));
   renderDonut('jobContent', data, '총원(명)');
-  document.getElementById('jobNote').textContent = '직급코드 첫 글자(R/S/A/G) 기준 · 총 ' + active.length + '명';
+  document.getElementById('jobNote').textContent = '직급코드 기준 · 총 ' + active.length + '명';
 }
 
 function renderEduCard(active){

@@ -125,6 +125,17 @@
   .vbar-track{ width:32px; height:110px; display:flex; align-items:flex-end; }
   .vbar-fill{ width:100%; border-radius:4px 4px 0 0; background:var(--c1); transition:height .35s, background .25s; min-height:2px; }
   .vbar-fill.neg{ background:var(--neg); }
+  .vbar-value{ font-size:11.5px; font-weight:700; color:var(--dark); margin-top:6px; }
+  .vbar-label{ font-size:11px; color:var(--sub); margin-top:2px; }
+
+  /* CSV 업로드 컨트롤 */
+  .csv-upload{ display:flex; align-items: center; gap:8px; margin-left:auto; }
+  .csv-upload label{
+    font-size:11px; fpnt-weight:700; color:var(--c1); border:1px solid var(--c1);
+    padding:4px 10px; border-radius:14px; cursor:pointer; white-space:nowrap;
+  }
+  .csv-upload input[type=file]{ display:none; }
+  .csv-upload .fname{ font-size:10.5px; color:var(--mute); max-width:120px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
   
   @media (max-width:900px){ .w-half{ width:100%; } }
 </style>

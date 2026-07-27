@@ -83,7 +83,7 @@
 
   /* ===== Grid / Card ===== */
   .grid{ display:flex; flex-wrap:wrap; gap:14px; }
-  .card{ background:var(--card); border:1px solid var(--border); border-radius:10px; padding:18px 20px 20px; box-shadow:0 1px 2px rbga(16,24,40,.04); }
+  .card{ background:var(--card); border:1px solid var(--border); border-radius:10px; padding:18px 20px 20px; box-shadow:0 1px 2px rgba(16,24,40,.04); }
   .w-half{ width:calc(50% - 7px); }
   .card-title{ display:flex; align-items:center; margin-bottom:14px; }
   .card-title .tab{ width:4px; height:15px; border-radius:1px; margin-right:8px; background:var(--c1); }
@@ -113,7 +113,7 @@
   .dept-group-head:first-child{ margin-top:0; }
   .dept-group-head b{ color:var(--mute); font-weight:700; font-size:11px; }
   .exec-list{ display:flex; flex-wrap:wrap; gap:6px; }
-  .exec-chip{ font-size:11px; background:F7F9FC; border:1px solid var(--border); border-radius:8px; padding:5px 9px; color:var(--dark); font-weight:600; }
+  .exec-chip{ font-size:11px; background:#F7F9FC; border:1px solid var(--border); border-radius:8px; padding:5px 9px; color:var(--dark); font-weight:600; }
   .exec-chip i{ font-style:normal; color:var(--mute); font-weight:500; margin-left:5px; }
 
   .donutwrap-centered{ display:flex; flex-direction:column; align-items:center; gap:16px; }
@@ -154,7 +154,7 @@
   .miniflow .diff{ font-size:12px; font-weight:700; padding:3px 9px; border-radius:10px; }
 
   .flow-note{ font-size:10.5px; color:var(--mute); margin-top:10px; line-height:1.6; }
-  .flow-tooltip{ position:absolute; background:#fff; border:1px solid #E5E5E5; border-radius:6px; padding:8px 10px; font-size:12px; line-height:1.6; box-shadow:0 4px 12px rbga(0,0,0,.12); z-index:50; min-width:80px; }
+  .flow-tooltip{ position:absolute; background:#fff; border:1px solid #E5E5E5; border-radius:6px; padding:8px 10px; font-size:12px; line-height:1.6; box-shadow:0 4px 12px rgba(0,0,0,.12); z-index:50; min-width:80px; }
   .footer{ margin-top:20px; font-size:10.5px; color:var(--mute); text-align:center; }
 
   @media (max-width:900px){ .w-half{ width:100%; } }
@@ -309,11 +309,11 @@ const EXEC_TITLES = ['임원','상무','전무','부사장'];
 function isExec(row){ return EXEC_TITLES.includes(row['직위코드명']); }
 function jobFamily(code, org){
   const p = (code || '')[0];
+  if(['VP', 'jED', 'MD'].includes(code)) return '임원';
   if(p === 'R') return 'R직군(연구개발)';
   if(p === 'S') return 'S직군(영업)';
   if(p === 'A') return 'A직군(경영지원)';
-  if(p === 'VP'|'jED'|'MD') return '임원';
-  if(p === 'G') return{
+  if(p === 'G'){
     if(/해양사업단|Smart Vessel사업팀/.test(org||'')) return 'S직군(영업)';
     if(/해양연구소|해양시스템1팀|해양시스템2팀|해양시스템3팀|해양시스템4팀|해양시스템5팀|해양SW1팀|해양SW2팀|Smart Battleship체계팀|무인체계팀/.test(org||'')) return 'R직군(연구개발)';
     if(/해양사업전략팀/.test(org||'')) return 'A직군(경영지원)';

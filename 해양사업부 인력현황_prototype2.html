@@ -89,7 +89,6 @@
   .card-title .tab{ width:4px; height:15px; border-radius:1px; margin-right:8px; background:var(--c1); }
   .card-title h2{ font-size:14.5px; font-weight:700; color:var(--dark); }
   .card-title .type{ margin-left:8px; font-size:9.5px; font-weight:800; padding:2px 6px; border-radius:8px; color:#fff; }
-  .type.bar{ background:var(--c1); } .type.pie{ background:#7C5FD1; } .type.tbl{ background:var(--pos); }
   .card-title .note{ margin-left:auto; font-size:10.5px; color:var(--mute); }
 
   .empty-state{ font-size:12.5px; color:var(--mute); text-align:center; padding:30px 10px; background:#F7F9FC; border-radius:8px; }
@@ -229,7 +228,7 @@
 
     <!-- 인력증감내역 -->
     <div class="card w-half">
-      <div class="card-title"><span class="tab"></span><h2>인력증감내역</h2><span class="type bar">FLOW</span><span class="note">전월/당월 명부 비교</span></div>
+      <div class="card-title"><span class="tab"></span><h2>인력증감내역</h2><span class="note">전월/당월 명부 비교</span></div>
       <div id="flowContent">
         <div class="empty-state">전월·당월 명부 CSV를 모두 올리면 표시됩니다</div>
       </div>
@@ -237,7 +236,7 @@
 
     <!-- 발령 변동사항 -->
     <div class="card w-half">
-      <div class="card-title"><span class="tab" style="background:var(--pos)"></span><h2>발령 변동사항</h2><span class="type tbl">TABLE</span><span class="note" id="changeNote">전월/당월 명부 비교</span></div>
+      <div class="card-title"><span class="tab" style="background:var(--pos)"></span><h2>발령 변동사항</h2><span class="note" id="changeNote">전월/당월 명부 비교</span></div>
       <div id="changeContent">
         <div class="empty-state">전월·당월 명부 CSV를 모두 올리면 표시됩니다</div>
       </div>
@@ -245,37 +244,37 @@
 
     <!-- 부서별 인원현황 -->
     <div class="card w-half">
-      <div class="card-title"><span class="tab"></span><h2>부서별 인원현황</h2><span class="type bar">BAR</span><span class="note" id="deptNote">원소속부서 기준</span></div>
+      <div class="card-title"><span class="tab"></span><h2>부서별 인원현황</h2><span class="note" id="deptNote">원소속부서 기준</span></div>
       <div id="deptContent"><div class="empty-state">당월 명부 CSV를 올리면 표시됩니다</div></div>
     </div>
 
     <!-- 직군별 인원 현황 -->
     <div class="card w-half">
-      <div class="card-title"><span class="tab" style="background:#7C5FD1"></span><h2>직군별 인원 현황</h2><span class="type pie">PIE</span><span class="note" id="jobNote">직급코드 기준</span></div>
+      <div class="card-title"><span class="tab" style="background:#7C5FD1"></span><h2>직군별 인원 현황</h2><span class="note" id="jobNote">직급코드 기준</span></div>
       <div id="jobContent"><div class="empty-state">당월 명부 CSV를 올리면 표시됩니다</div></div>
     </div>
 
     <!-- 조직별 학력사항 -->
     <div class="card w-half">
-      <div class="card-title"><span class="tab" style="background:var(--pos)"></span><h2>조직별 학력사항</h2><span class="type tbl">TABLE</span><span class="note">조직 × 최종학력</span></div>
+      <div class="card-title"><span class="tab" style="background:var(--pos)"></span><h2>조직별 학력사항</h2><span class="note">조직 × 최종학력</span></div>
       <div id="eduContent"><div class="empty-state">당월 명부 CSV를 올리면 표시됩니다</div></div>
     </div>
 
     <!-- 사외파견 인원 현황 -->
     <div class="card w-half">
-      <div class="card-title"><span class="tab" style="background:#7C5FD1"></span><h2>파견 인원 현황</h2><span class="type pie">PIE</span><span class="note" id="dispatchNote">파견지역 기준</span></div>
+      <div class="card-title"><span class="tab" style="background:#7C5FD1"></span><h2>파견 인원 현황</h2><span class="note" id="dispatchNote">파견지역 기준</span></div>
       <div id="dispatchContent"><div class="empty-state">당월 명부 CSV를 올리면 표시됩니다</div></div>
     </div>
 
     <!-- 팀별 평균 근속 연수 -->
     <div class="card w-half">
-      <div class="card-title"><span class="tab"></span><h2>팀별 평균 근속 연수</h2><span class="type bar">BAR</span><span class="note">그룹입사일 기준 · 임원 제외</span></div>
+      <div class="card-title"><span class="tab"></span><h2>팀별 평균 근속 연수</h2><span class="note">그룹입사일 기준 · 임원 제외</span></div>
       <div id="teamTenureContent"><div class="empty-state">당월 명부 CSV를 올리면 표시됩니다</div></div>
     </div>
 
     <!-- 근속연수별 인원 현황 -->
     <div class="card w-half">
-      <div class="card-title"><span class="tab"></span><h2>근속연수별 인원 현황</h2><span class="type bar">BAR</span><span class="note" id="tenureBucketNote">그룹입사일 기준 구간</span></div>
+      <div class="card-title"><span class="tab"></span><h2>근속연수별 인원 현황</h2><span class="note" id="tenureBucketNote">그룹입사일 기준 구간</span></div>
       <div id="tenureBucketContent"><div class="empty-state">당월 명부 CSV를 올리면 표시됩니다</div></div>
     </div>
 

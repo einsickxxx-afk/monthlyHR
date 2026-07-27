@@ -626,14 +626,14 @@ function renderComparison(){
 
     // 부서 변경 → 보직변경/전배
     if(prevRow['원소속부서'] !== row['원소속부서']){
-      changeRows.push({ name: row['성명'], type:'보직변경', before: prevRow['원소속부서'], after: row['원소속부서'], tag:'move' });
+      changeRows.push({ name: row['성명'], type:'전배', before: prevRow['원소속부서'], after: row['원소속부서'], tag:'move' });
     }
     // 근무지 변경 → 사업장/근무지역
     if(prevRow['원소속사업장'] !== row['원소속사업장']){
-      changeRows.push({ name: row['성명'], type:'사업장변경', before: prevRow['원소속사업장'], after: row['원소속사업장'], tag:'move' });
+      changeRows.push({ name: row['성명'], type:'사업장이동', before: prevRow['원소속사업장'], after: row['원소속사업장'], tag:'move' });
     }
     if(prevRow['원소속근무지역'] !== row['원소속근무지역']){
-      changeRows.push({ name: row['성명'], type:'근무지역변경', before: prevRow['원소속근무지역'], after: row['원소속근무지역'], tag:'move' });
+      changeRows.push({ name: row['성명'], type:'근무지이동', before: prevRow['원소속근무지역'], after: row['원소속근무지역'], tag:'move' });
     }
     // 직급 변경 → 승진/직급변동
     if(prevRow['직급명'] !== row['직급명']){

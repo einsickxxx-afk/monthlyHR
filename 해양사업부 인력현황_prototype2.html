@@ -137,6 +137,10 @@
   .tag.retire{ background:#FDEDE8; color:#C6431E; }
   .tag.hire{ background:#F3EFFD; color:#7C5FD1; }
   .tag.dispatch{ background:#F3EFFD; color:#7C5FD1; }
+  table.tbl td{ vertical-align:top; }
+  .chg-line{ display:flex; align-itmes:center; gap:6px; margin-bottom:4px; font-size:11.5px; color:#344054; }
+  .chg-line:last-child{ margin-bottom:0; }
+  .chg-arrow{ color:#475467; }
 
   .miniflow{ display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; padding:12px 14px; background:#F7F9FC; border-radius:8px; }
   .miniflow .num{ font-size:22px; font-weight:800; color:var(--dark); }
@@ -666,7 +670,7 @@ function renderComparison(){
 
   const flow = { 채용:0, 복직:0, 전입:0, 퇴직:0, 휴직:0, 전출:0 };
   const flowNames = { 채용:[], 복직:[], 전입:[], 퇴직:[], 휴직:[], 전출:[] };
-  const changeRows = [];
+  const changeRows = []; // { name, changes: [{type, before, after, tag}, ...] 
 
   currMap.forEach((row, id) => {
     if(!prevMap.has(id)){
@@ -689,49 +693,48 @@ function renderComparison(){
   currMap.forEach((row, id) => {
     if(!prevMap.has(id)) return;
     const prevRow = prevMap.get(id);
-
-    // 재직상태 변화 → 휴직/복직
+    const changes = [];
+    
     if(prevRow['재직상태']==='재직' && row['재직상태']==='휴직'){
       flow['휴직']++;
       flowNames['휴직'].push(row['성명']);
-      changeRows.push({ name: row['성명'], type:'휴직', before:'재직', after: row['휴직구분명']||'휴직', tag:'leave' });
+      changes.push({ type:'휴직', before: '재직', after: row['휴직구분명']||'휴직', tag:'leave' });
     }
-    if(prevRow['재직상태']==='휴직' && row['재직상태']==='재직'){
+   if(prevRow['재직상태']==='휴직' && row['재직상태']==='재직'){
       flow['복직']++;
       flowNames['복직'].push(row['성명']);
-      changeRows.push({ name: row['성명'], type:'복직', before:'휴직', after:'재직', tag:'promo' });
-    }
+      changes.push({ type:'복직', before: '휴직', after: row['재직']||'휴직', tag:'promo' }); 
+   }
+   if(prevRow['원소속부서']!=='휴직' && row['원소속부서']){
+      changes.push({ type:'전배', before: prevRow['원소속부서'], after: row['원소속부서'], tag:'move' }); 
+   }
+   if(prevRow['원소속사업장']!=='휴직' && row['원소속사업장']){
+      changes.push({ type:'사업장이동', before: prevRow['원소속사업장'], after: row['원소속사업장'], tag:'move' }); 
+   }
+   if(prevRow['원소속근무지역']!=='휴직' && row['원소속근무지역']){
+      changes.push({ type:'근무지이동', before: prevRow['원소속근무지역'], after: row['원소속근무지역'], tag:'move' }); 
+   }
+   if(prevRow['직급명']!=='휴직' && row['직급명']){
+      changes.push({ type:'직급변동', before: prevRow['직급명'], after: row['직급명'], tag:'promo' }); 
+   }
+   const prevDispatched = (prevRow['파견조직코드명']||'').trim() !== '';
+   const currDispatched = (row['파견조직코드명']||'').trim() !== '';
+   if(!prevDispatched && currDispatched){
+     changes.push({ type:'파견시작', before:'원소속 근무', after: row['파견조직코드명'], tag:'dispatch' });
+   }
+   if(prevDispatched && !currDispatched){
+     changes.push({ type:'파견복귀', before: prevRow['파견조직코드명'], after:'원소속 복귀', tag:'dispatch' });
+   }
 
-    // 부서 변경 → 전배
-    if(prevRow['원소속부서'] !== row['원소속부서']){
-      changeRows.push({ name: row['성명'], type:'전배', before: prevRow['원소속부서'], after: row['원소속부서'], tag:'move' });
-    }
-    // 근무지 변경 → 사업장/근무지역
-    if(prevRow['원소속사업장'] !== row['원소속사업장']){
-      changeRows.push({ name: row['성명'], type:'사업장이동', before: prevRow['원소속사업장'], after: row['원소속사업장'], tag:'move' });
-    }
-    if(prevRow['원소속근무지역'] !== row['원소속근무지역']){
-      changeRows.push({ name: row['성명'], type:'근무지이동', before: prevRow['원소속근무지역'], after: row['원소속근무지역'], tag:'move' });
-    }
-    // 직급 변경 → 승진/직급변동
-    if(prevRow['직급명'] !== row['직급명']){
-      changeRows.push({ name: row['성명'], type:'직급변동', before: prevRow['직급명'], after: row['직급명'], tag:'promo' });
-    }
-    // 파견 상태 변경
-    const prevDispatched = (prevRow['파견조직코드명']||'').trim() !== '';
-    const currDispatched = (row['파견조직코드명']||'').trim() !== '';
-    if(!prevDispatched && currDispatched){
-      changeRows.push({ name: row['성명'], type:'파견시작', before:'원소속 근무', after: row['파견조직코드명'], tag:'dispatch' });
-    }
-    if(prevDispatched && !currDispatched){
-      changeRows.push({ name: row['성명'], type:'파견복귀', before: prevRow['파견조직코드명'], after:'원소속 복귀', tag:'dispatch' });
-    }
+   if(changes.length){
+     changeRows.push({ name: row['성명'], changes });
+   }
   });
 
-  renderFlowCard(prevRows, currRows, flow, flowNames);
+  renderFlowCard(prevRows, currRows, flow, flownames);
   renderChangeTable(changeRows);
 }
-
+    
 function renderFlowCard(prevRows, currRows, flow, flowNames){
   const prevCount = prevRows.filter(r => r['재직상태']==='재직').length;
   const currCount = currRows.filter(r => r['재직상태']==='재직').length;
@@ -796,8 +799,9 @@ document.addEventListener('click', function(e){
 });
 
 function renderChangeTable(rows){
+  const totalChanges = rows.reduce((a,r)=>a+r.changes.length,0);
   document.getElementById('changeNote').textContent = `당월 기준 · 총 ${rows.length}건`;
-  document.getElementById('kpiChanges').textContent = rows.length + '건';
+  document.getElementById('kpiChanges').textContent = totalChanges + '건';
   document.getElementById('kpiChangesChip').textContent = '전월 대비 변동';
   document.getElementById('kpiChangesChip').className = 'chip up';
 
@@ -805,9 +809,14 @@ function renderChangeTable(rows){
     document.getElementById('changeContent').innerHTML = '<div class="empty-state">전월 대비 변동 사항이 없습니다</div>';
     return;
   }
-  const body = rows.map(r => `<tr><td>${r.name}</td><td><span class="tag ${r.tag}">${r.type}</span></td><td>${r.before}</td><td>${r.after}</td></tr>`).join('');
+  const body = rows.map(r => {
+    const lines = r.changes.map(c =>
+      `<div class="chg-line"><span class="tag ${c.tag}">${c.type}</span><span class="chg-arrow">${c.before} -> ${c.after}</span></div>`
+    ).join('');
+    return `<tr><td>${r.name}</td><td>${lines}</td></tr>`;
+  }).join('');
   document.getElementById('changeContent').innerHTML = `
-    <table class="tbl"><tr><th>성명</th><th>구분</th><th>변경 전</th><th>변경 후</th></tr>${body}</table>
+    <table class="tbl"><tr><th>성명</th><th>변동내역</th></tr>${body}</table>
   `;
 }
 

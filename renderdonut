@@ -1,0 +1,44 @@
+function renderDonut(containerId, data, centerLabel){
+  const total = data.reduce((a, d) => a + d.value, 0);
+  const cx = 150, cy = 150, r = 88;
+  const toRad = deg => deg * Math.PI / 180;
+  const point = (angleDeg, radius) => [cx + radius*Math.cos(toRad(angleDeg)), cy + radius*Math.sin(toRad(angleDeg))];
+
+  let startAngle = -90;
+  let paths = '';
+  let labels = '';
+
+  data.forEach(d => {
+    const sweep = total ? (d.value/total)*360 : 0;
+    const endAngle = startAngle + sweep;
+    const midAngle = startAngle + sweep/2;
+    const [x1,y1] = point(startAngle, r);
+    const [x2,y2] = point(endAngle, r);
+    const largeArc = sweep > 180 ? 1 : 0;
+    paths += `<path d="M${cx},${cy} L${x1},${y1} A${r},${r} 0 ${largeArc} 1 ${x2},${y2} Z" fill="${d.color}" stroke="#fff" stroke-width="1.5"/>`;
+
+    if(d.value > 0){
+      const pct = total ? Math.round(d.value/total*100) : 0;
+      const isRight = Math.cos(toRad(midAngle)) >= 0;
+      const [lx1,ly1] = point(midAngle, r);
+      const [lx2,ly2] = point(midAngle, r+16);
+      const tx = lx2 + (isRight ? 5 : -5);
+      const anchor = isRight ? 'start' : 'end';
+      labels += `
+        <line x1="${lx1}" y1="${ly1}" x2="${lx2}" y2="${ly2}" stroke="#98A2B3" stroke-width="1"/>
+        <text x="${tx}" y="${ly2}" text-anchor="${anchor}" font-size="11" fill="#344054">
+          <tspan x="${tx}" dy="-2">${d.label}</tspan>
+          <tspan x="${tx}" dy="14" font-weight="700">${d.value}명, ${pct}%</tspan>
+        </text>`;
+    }
+    startAngle = endAngle;
+  });
+
+  const legend = data.map(d => `<span class="pie-legend-item"><i style="background:${d.color}"></i>${d.label}</span>`).join('');
+
+  document.getElementById(containerId).innerHTML = `
+    <div class="pie-title">${centerLabel}</div>
+    <svg width="100%" height="300" viewBox="0 0 300 300" style="overflow:visible;">${paths}${labels}</svg>
+    <div class="pie-legend">${legend}</div>
+  `;
+}

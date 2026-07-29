@@ -721,10 +721,10 @@ function renderDispatchCard(active){
   const regionPeople = {};
   dispatched.forEach(r => { 
    const region = r['파견지역'] || '미기재'; 
-   counts[region] = (counts[region]||0)+1; });
+   counts[region] = (counts[region]||0)+1;
    const changed = (r['소속변경여부'] || '').trim() === 'Y';
    (regionPeople[region] = regionPeople[region] || []).push({
-     name: r['성명']
+     name: r['성명'],
      reason: r['파견사유'] || '-',
      changed,
      dispatchOrg: r['파견조직코드명']
@@ -780,7 +780,7 @@ function showDispatchTooltip(e, region){
   }
   const people = (window.__dispatchPeopleMap && window.__dispatchPeopleMap[region]) || [];
   tip.innerHTML = `<div style="font-weight:700;margin-bottom:4px;">${region} (${people.length}명)</div>` +
-    people.map(p => `<div>${p.name} · ${p.reason}${p.changed ? ' · 파견소속: ' p.dispatchOrg : ''}</div>`).join('');
+    people.map(p => `<div>${p.name} · ${p.reason}${p.changed ? ' · 파견소속: ' + p.dispatchOrg : ''}</div>`).join('');
   tip.dataset.region = region;
   tip.style.left = (e.pageX + 12) + 'px';
   tip.style.top = (e.pageY + 12) + 'px';
@@ -1055,7 +1055,7 @@ function renderChangeTable(rows){
     const tag = list[0].tag;
     const groupHead = `<tr class="chg-group-head"><td colspan="2"><span class="tag ${tag}">${type}</span><span class="chg-group-count">${list.length}건</span></td></tr>`;
     const groupRows = list.map(c =>
-      `<tr><td>${c.name}</td><td><span class="chg-position">${c.position ? ' · ' + c.position : ''}</span></td><td><span class="chg-arrow">${c.before} -> ${c.after}</span></td></tr>`
+      `<tr><td>${c.name}<span class="chg-position">${c.position ? ' · ' + c.position : ''}</span></td><td><span class="chg-arrow">${c.before} -> ${c.after}</span></td></tr>`
     ).join('');
     return groupHead + groupRows;
   }).join('');

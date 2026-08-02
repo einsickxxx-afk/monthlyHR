@@ -722,10 +722,10 @@ function renderDispatchCard(active){
   dispatched.forEach(r => { 
    const region = r['파견지역'] || '미기재'; 
    counts[region] = (counts[region]||0)+1;
-   const changed = (r['소속변경여부'] || '').trim() === 'Y';
+   const changed = (r['파견조직코드명'] || '').trim() === 'Y';
    (regionPeople[region] = regionPeople[region] || []).push({
      name: r['성명'],
-     reason: r['파견사유'] || '-',
+     reason: r['파견내용'] || '-',
      changed,
      dispatchOrg: r['파견조직코드명']
    });

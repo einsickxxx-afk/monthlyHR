@@ -130,11 +130,19 @@
   .dept-group-head{ display:flex; justify-content:space-between; align-items:center; font-size:11.5px; font-weight:800; color:var(--dark); margin:10px 0 6px; padding-bottom:4px; border-bottom:1px solid var(--border); }
   .dept-group-head:first-child{ margin-top:0; }
   .dept-group-head b{ color:var(--mute); font-weight:700; font-size:11px; }
-  .dept-tile-grid{ display:grid; grid-template-columns:repeat(auto-fill, minmax(96px,1fr)); gap:8px; margin-bottom:8px; }
+  .dept-tile-grid{ display:grid; grid-template-columns:repeat(auto-fill, minmax(112px,1fr)); gap:8px; margin-bottom:8px; }
   .dept-tile{ background:#F7F9FC; border-left:3px solid var(--c1); border-radius:6px; padding:10px 12px; cursor:pointer; }
   .dept-tile-count{ font-size:18px; font-weight:800; color:var(--dark); }
   .dept-tile-count span{ font-size:11px; font-weight:600; color:var(--mute); margin-left:2px; }
-  .dept-tile-name{ font-size:11px; color:var(--sub); margin-top:3px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .dept-tile-name{ 
+    font-size:11px; color:var(--sub); margin-top:3px; 
+    display:-webkit-box;
+    -webkit-line-clamp:2;
+    -webkit-box-orient:vertical;
+    overflow:hidden; 
+    white-space:normal;
+    line-height:1.35;
+  }
 
   /* 파이 차트 - 중앙 정렬형 */
   .pie-title{ font-size:11px; color:var(--mute); text-align:center; margin-bottom:2px; }
@@ -669,7 +677,7 @@ function renderDeptCard(active){
     const subtotal = entries.reduce((a,[,v])=>a+v,0);
     html += `<div class="dept-group-head"><span>${g}</span><b>${subtotal}명</b></div>`;
     html += `<div class="dept-tile-grid">` + entries.map(([label,value]) => `
-      <div class="dept-tile" style="border-left-color:${groupColor[g]}"> onclick="toggleDeptTooltip(event, '${esc(label)}')">
+      <div class="dept-tile" style="border-left-color:${groupColor[g]}" onclick="toggleDeptTooltip(event, '${esc(label)}')">
         <div class="dept-tile-count">${value}<span>명</span></div>
         <div class="dept-tile-name">${label}</div>
       </div>`).join('') + `</div>`;
@@ -695,7 +703,7 @@ function toggleDeptTooltip(e, org){
   }
 
   const heads = (window.__deptHeadMap && window.__deptHeadMap[org]) || [];
-  tip.innerHTML = `<div style="font-weight:700;margin-bottom:4px;">{org}</div>` +
+  tip.innerHTML = `<div style="font-weight:700;margin-bottom:4px;">${org}</div>` +
     (heads.length
      ? heads.map(h => `<div>${h.name} (${h.title})</div>`).join('')
      : '<div style="color:#999;">직책코드명상 조직장 정보 없음</div>');
@@ -709,7 +717,7 @@ function toggleDeptTooltip(e, org){
 
 document.addEventListener('click', function(e){
   const tip = document.getElementById('deptTooltip');
-  if(!tip) reutrn;
+  if(!tip) return;
   if(!tip.contains(e.target) && !e.target.closest('.dept-tile')){
     tip.style.display = 'none';
     tip.dataset.org = '';
@@ -767,7 +775,6 @@ function renderDispatchCard(active){
   dispatched.forEach(r => { 
    const region = r['파견지역'] || '미기재'; 
    counts[region] = (counts[region]||0)+1;
-   const changed = (r['파견조직코드명'] || '').trim() === 'Y';
    (regionPeople[region] = regionPeople[region] || []).push({
      name: r['성명'],
      reason: r['파견내용'] || '-',
@@ -825,7 +832,7 @@ function showDispatchTooltip(e, region){
   }
   const people = (window.__dispatchPeopleMap && window.__dispatchPeopleMap[region]) || [];
   tip.innerHTML = `<div style="font-weight:700;margin-bottom:4px;">${region} (${people.length}명)</div>` +
-    people.map(p => `<div>${p.name} · ${p.reason}${p.changed ? ' · 파견소속: ' + p.dispatchOrg : ''}</div>`).join('');
+    people.map(p => `<div>${p.name} · ${p.reason}${p.changed ? ' · 파견소속: ${p.dispatchOrg}</div>`).join('');
   tip.dataset.region = region;
   tip.style.left = (e.pageX + 12) + 'px';
   tip.style.top = (e.pageY + 12) + 'px';

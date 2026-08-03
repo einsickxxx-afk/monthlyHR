@@ -670,7 +670,7 @@ function renderAllFromCurrent(){
   renderTenureCards(active);
   // 휴직 인원은 재직상태가 '휴직'인 행이라 위의 active(재직) 목록에는 잡히지 않으므로 별도로 추출
     const onLeave = marineAll.filter(r => r['재직상태'] === '휴직');
-    renderLeaveCard(onLeae);
+    renderLeaveCard(onLeave);
 }
 
 const HEAD_TITLES = ['사업부장', '사업단장', '사업센터장', '연구소장', '팀장'];

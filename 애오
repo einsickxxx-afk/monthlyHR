@@ -1,0 +1,99 @@
+/* ===================================================================
+   4-1. 페이지 탭 전환 (1p 개요 / 2p 휴직 인원 ...)
+   =================================================================== */
+function showPage(n){
+  document.getElementById('page1').classList.toggle('active', n === 1);
+  document.getElementById('page2').classList.toggle('active', n === 2);
+  document.getElementById('tabBtn1').classList.toggle('active', n === 1);
+  document.getElementById('tabBtn2').classList.toggle('active', n === 2);
+}
+
+/* ===================================================================
+   4-2. 날짜 파싱 / 표기 공용 헬퍼
+   전사명부의 날짜 컬럼은 "20260301" 형태(YYYYMMDD)로 내려오는 경우가
+   많아 이를 기본으로 하되, "2026-03-01" 같은 구분자 포함 형태도 함께 지원합니다.
+   =================================================================== */
+function parseYMD(v){
+  if(!v) return null;
+  const s = String(v).trim();
+  if(!s) return null;
+  let y, m, d;
+  if(/^\d{8}$/.test(s)){
+    y = +s.slice(0,4); m = +s.slice(4,6); d = +s.slice(6,8);
+  } else {
+    const m2 = s.match(/^(\d{4})[-.\/](\d{1,2})[-.\/](\d{1,2})/);
+    if(!m2) return null;
+    y = +m2[1]; m = +m2[2]; d = +m2[3];
+  }
+  const dt = new Date(y, m-1, d);
+  return isNaN(dt.getTime()) ? null : dt;
+}
+function fmtYMD(dt){
+  if(!dt) return '-';
+  const y = String(dt.getFullYear()).slice(2);
+  const m = String(dt.getMonth()+1).padStart(2,'0');
+  const d = String(dt.getDate()).padStart(2,'0');
+  return `'${y}.${m}.${d}`;
+}
+
+/* ===================================================================
+   4-3. 휴직중 인원 명단 (2p)
+   재직상태='휴직'인 행을 원소속부서 기준으로 그대로 사용합니다.
+   복직예정일 임박순으로 정렬하고, 기준일로부터 3개월 이내 복직 예정
+   행은 강조 표시합니다.
+   =================================================================== */
+function renderLeaveCard(leaveRows){
+  const base = baseDate();
+
+  const rows = leaveRows.map(r => ({
+    name: r['성명'],
+    org: r['원소속부서'],
+    title: r['직위코드명'] || '-',
+    type: r['휴직구분명'] || '기타',
+    leaveDate: parseYMD(r['휴직일']),
+    returnDate: parseYMD(r['복직예정일'])
+  })).sort((a,b) => {
+    if(!a.returnDate && !b.returnDate) return 0;
+    if(!a.returnDate) return 1;
+    if(!b.returnDate) return -1;
+    return a.returnDate - b.returnDate;
+  });
+
+  if(rows.length === 0){
+    document.getElementById('leaveContent').innerHTML = '<div class="empty-state">휴직중인 인원이 없습니다</div>';
+    document.getElementById('leaveNote').textContent = '총 0명';
+    return;
+  }
+
+  const in3m = new Date(base);
+  in3m.setMonth(in3m.getMonth() + 3);
+  const isSoon = r => r.returnDate && r.returnDate >= base && r.returnDate <= in3m;
+
+  const typeCounts = {};
+  rows.forEach(r => { typeCounts[r.type] = (typeCounts[r.type]||0) + 1; });
+  const soonCount = rows.filter(isSoon).length;
+
+  const typeBadgeColor = { '육아휴직': ['#EAF1FF', '#2F6FED'], '직무외상병휴직': ['#FDF3E7', '#B7791F'] };
+  const badges = Object.entries(typeCounts).map(([t,c]) => {
+    const [bg,fg] = typeBadgeColor[t] || ['#F3EFFD', '#7C5FD1'];
+    return `<span class="badge" style="background:${bg};color:${fg};">${t} ${c}명</span>`;
+  }).join('') + (soonCount ? `<span class="badge" style="background:#E6F7F2;color:#16876F;">3개월 내 복직 ${soonCount}명</span>` : '');
+
+  const body = rows.map(r => `
+    <tr${isSoon(r) ? ' style="background:#E6F7F2;"' : ''}>
+      <td>${r.name}</td>
+      <td>${r.org}</td>
+      <td>${r.title}</td>
+      <td>${r.type}</td>
+      <td>${fmtYMD(r.leaveDate)}</td>
+      <td>${fmtYMD(r.returnDate)}</td>
+    </tr>`).join('');
+
+  document.getElementById('leaveContent').innerHTML = `
+    <div class="badge-row">${badges}</div>
+    <table class="tbl">
+      <tr><th>성명</th><th>원소속부서</th><th>직위</th><th>휴직구분</th><th>휴직일</th><th>복직예정일</th></tr>
+      ${body}
+    </table>`;
+  document.getElementById('leaveNote').textContent = `총 ${rows.length}명 · 복직예정일 임박순 정렬`;
+}

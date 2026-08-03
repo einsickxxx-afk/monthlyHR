@@ -220,7 +220,7 @@
       <button type="button" class="savebtn" onclick="exportSnapshot()">현재 화면 HTML로 저장</button>
     </div>
     <div class="divider"></div>
-    <span style="font-size:11px; color:var(--mute);">전사명부를 올려도 됩니다 — 해양사업부 소속만 자동으로 걸러서 집계합니다. 당월 파일만 올리면 인력증감·발령 변동사항을 제외한 모든 카드가 계산됩니다.</span>
+    <span style="font-size:11px; color:var(--mute);">전사명부를 업로드해 주십시오. 당월 파일만 올리면 인력증감·발령 변동사항을 제외한 모든 카드가 계산됩니다.</span>
   </div>
 
   <div class="upload-err" id="uploadErrorBanner" style="display:none;"></div>
@@ -974,7 +974,7 @@ function renderComparison(){
     const prevDispatched = (prevRow['파견조직코드명']||'').trim() !== '';
     const currDispatched = (row['파견조직코드명']||'').trim() !== '';
     if(!prevDispatched && currDispatched){
-      changes.push({ type:'파견시작', before:'원소속 근무', after: row['파견조직코드명'], tag:'dispatch' });
+      changes.push({ type:'파견시작', before: prevRow['원소속부서'], after: row['파견조직코드명'], tag:'dispatch' });
     }
     if(prevDispatched && !currDispatched){
       changes.push({ type:'파견복귀', before: prevRow['파견조직코드명'], after:'원소속 복귀', tag:'dispatch' });

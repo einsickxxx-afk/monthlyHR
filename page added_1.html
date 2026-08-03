@@ -187,10 +187,15 @@
   .page-tab{
     font-family:inherit; font-size:12.5px; font-weight:700; padding:8px 16px;
     border-radius:8px; border:1px solid var(--border); background:var(--card);
-    color:var(--sub); cursor:poiter;
+    color:var(--sub); cursor:pointer;
   }
   .page-tab.active{ background:var(--dark); color:#fff; border-color:var(--dark); }
+  .page{ display:none; }
+  .page.active{ display:block; }
 
+  /* ===== 요약 배지 (2p 휴직/계약 등 리스트형 카드 상단) ===== */
+  .badge-row{ display:flex; flex-wrap:wrap; gap:8px; margin-bottom:12px; }
+  .badge{ font-size:11.5px; font-weight:700; padding:4px 11px; border-radius:11px; white-space:nowrap; }
 
   @media (max-width:900px){ .w-half{ width:100%; } }
 </style>
@@ -248,6 +253,13 @@
     </div>
   </div>
 
+  <div class="page-tabs">
+    <button type="button" class="page-tab active" id="tabBtn1" onclick="showPage(1)">1p 개요</button>
+    <button type="button" class="page-tab" id="tabBtn2" onclick="showPage(2)">2p 휴직 인원</button>
+  </div>
+
+  <div class="page active" id="page1">
+  
   <div class="kpi-row">
     <div class="kpi alt">
       <div class="label">전체 재직 인원</div>
@@ -325,7 +337,20 @@
       <div id="tenureBucketContent" class="card-body"><div class="empty-state">당월 명부 CSV를 올리면 표시됩니다</div></div>
     </div>
 
-  </div>
+  </div><!-- /page1 -->
+
+    <div class="page" id="page2">
+    <div class="grid">
+
+      <!-- 휴직중 인원 명단 -->
+      <div class="card" style="width:100%;">
+        <div class="card-title"><span class="tab" style="background:var(--pos)"></span><h2>휴직중 인원 명단</h2><span class="note"  id="leaveNote">원소속부서 기준</span></div>
+        <div id="leaveContent" class="card-body"><div class="empty-state">당월 명부 CSV를 올리면 표시됩니다</div></div>
+      </div>
+
+    </div>
+    </div><!-- /page2 -->
+    
 
   <div class="footer" id="footerNote">CSV를 업로드하면 이 대시보드의 모든 수치가 자동 계산됩니다 · 색상 테마는 상단 패널에서 변경 가능</div>
 
@@ -643,6 +668,9 @@ function renderAllFromCurrent(){
   renderEduCard(active);
   renderDispatchCard(active);
   renderTenureCards(active);
+  // 휴직 인원은 재직상태가 '휴직'인 행이라 위의 active(재직) 목록에는 잡히지 않으므로 별도로 추출
+    const onLeave = marineAll.filter(r => r['재직상태'] === '휴직');
+    renderLeaveCard(onLeae);
 }
 
 const HEAD_TITLES = ['사업부장', '사업단장', '사업센터장', '연구소장', '팀장'];

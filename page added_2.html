@@ -790,10 +790,12 @@ function renderLeaveCard(leaveRows){
    =================================================================== */
 const LEVEL_NUMS = ['7','6','5','4','3'];
 
-function levelKey(raw){
-  const s = (raw || '').trim().toLowerCase();
-  const m = s.match(/^(?:lv|cw)([3-7])$/); // lv, cw만 레벨로 인정 (ex 등은 제외)
-  return m ? m[1] : null;
+function levelKey(code){
+  const s = (raw || '').trim();
+  const m = s.match(/[0-9]/); // 코드 내 첫 번째 숫자
+  if(!m) return null;
+  const n = m[0];
+  return (n >= '3' && n =< '7') ? n : null;
 }
 
 function renderLevelCard(active){
@@ -802,7 +804,7 @@ function renderLevelCard(active){
   let excluded = 0;
 
   active.forEach(r => {
-    const n = levelKey(r['그룹직급']);
+    const n = isExec(r) ? null : levelKey(r['직급코드']);
     if(n) counts[n]++;
     else excluded++;
   });

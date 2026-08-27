@@ -1067,7 +1067,7 @@ function buildOrgChartSvg(branches){
   });
 
   // width:100%/height:auto로 카드 폭에 맞춰 자동으로 축소·확대됩니다(가로 스크롤 불필요).
-  return `<svg viewBox="0 0 ${totalW} ${totalH}" width="${totalW}" height="${totalH}" style="width:100%;height:auto;display:block;">${svg}</svg>`;
+  return `<svg viewBox="0 0 ${totalW} ${totalH}" width="${totalW}" height="${totalH}" style="width:95%;height:auto;display:block;">${svg}</svg>`;
 }
 // key: 'ROOT'(전체), 'GRP:해양연구소'/'GRP:SV사업센터'(조직 전체 합산), 그 외에는 팀명 그대로.
 function getRosterRows(key){

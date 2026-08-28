@@ -369,6 +369,11 @@
       <div id="retireForecastContent" class="card-body"><div class="empty-state">당월 명부 CSV를 올리면 표시됩니다</div></div>
     </div>
 
+    <div class="card" style="width:100%;">
+      <div class="card-title"><span class="tab" style="background:#16876F"></span><h2>계약직 현황</h2>
+      <div id="contractContent" class="card-body"><div class="empty-state">당월 명부 CSV를 올리면 표시됩니다</div></div>
+    </div>
+
   </div>
   </div><!-- /page3 -->
 
@@ -466,7 +471,7 @@ function themeColors(){
 /* ===================================================================
    2. CSV 파싱 & 상태
    =================================================================== */
-const state = { curr: null, prev: null };
+const state = { curr: null, prev: null, contractDates: {} };
 
 function parseCsvText(text){
   const lines = text.split(/\r?\n/).filter(l => l.length > 0);
@@ -690,6 +695,7 @@ function renderAllFromCurrent(){
   renderTenureCards(active);
   renderLevelCard(active);
   renderRetireForecastCard(active);
+  renderContractCard(active);
 
   // 휴직 인원은 재직상태가 '휴직'인 행이라 위의 active(재직) 목록에는 잡히지 않으므로 별도로 추출
   const onLeave = marineAll.filter(r => r['재직상태'] === '휴직');
@@ -1789,7 +1795,8 @@ function toggleCollapse(id){
   //  전역 데이터가 비어 있어 툴팁이 뜨지 않습니다.)
   if(window.__EMBEDDED_CURR_CSV){
     if(window.__EMBEDDED_REPORT_DATE) document.getElementById('reportDate').value = window.__EMBEDDED_REPORT_DATE;
-    state.curr = parseCsvText(window.__EMBEDDED_CURR_CSV);
+    if(window.__EMBEDDED_CONTRACT_DATES){
+      try { state.curr = parseCsvText(window.__EMBEDDED_CURR_CSV);
     renderAllFromCurrent();
     if(window.__EMBEDDED_PREV_CSV){
       state.prev = parseCsvText(window.__EMBEDDED_PREV_CSV);

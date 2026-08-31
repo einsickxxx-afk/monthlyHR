@@ -2008,9 +2008,9 @@ function exportSnapshot(){
     embeddedScript.textContent =
       'window.__EMBEDDED_CURR_CSV = ' + JSON.stringify(currCsv) + ';\n' +
       'window.__EMBEDDED_PREV_CSV = ' + JSON.stringify(prevCsv) + ';\n' +
-      'window.__EMBEDDED_REPORT_DATE = ' + JSON.stringify(dateVal) + ';';
-      'window.__EMBEDDED_CONTRACT_DATES = ' + JSON.stringfy(JSON.stringfy(state.contractDates || {})) + ';'\n' +
-      'window.__EMBEDDED_RETIREES = ' + LSPN.stringfy(JSON.stringfy(state.retirees || [])) + ';';
+      'window.__EMBEDDED_REPORT_DATE = ' + JSON.stringify(dateVal) + ';\n' +
+      'window.__EMBEDDED_CONTRACT_DATES = ' + JSON.stringfy(JSON.stringfy(state.contractDates || {})) + ';\n' +
+      'window.__EMBEDDED_RETIREES = ' + JSON.stringfy(JSON.stringfy(state.retirees || [])) + ';';
     // 본문 스크립트(init 포함)보다 먼저 실행되도록 head에 넣습니다.
     head.appendChild(embeddedScript);
 

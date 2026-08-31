@@ -1332,9 +1332,10 @@ function hideDispatchTooltip(){
   }
 }
 
-/* 4-2b. 사외파견 인원 현황(4p) - 파견 등록 인원 중, 파견지역에 기존 사업장(서울2/구미) 키워드가 들어가지 않는 인원만 추출
-  지역 -> 원소속부서(팀) -> 직위 순으로 구역을 나눠 표시하고, 기준일(reportDate)로부터 3개월 이내 파견 종료 예정 인원은
-  배지 표시 + 하이라이트합니다. */
+/* 4-2b. 사외파견 인원 현황 (4p) — 파견 등록자 중, 파견지역에 본사업장 키워드
+   (서울/구미, "서울특별시"처럼 접미어가 붙어도 포함 매칭)가 들어가지 않는 인원만 추출.
+   지역 → 원소속부서(팀) → 직위 순으로 구역을 나눠 표시하고,
+   기준일(reportDate)로부터 3개월 이내 파견종료 예정 인원은 배지 표시 + 하이라이트합니다. */
 const HQ_SITES = ['서울', '구미'];
 
 function isOffsite(r){
@@ -1343,41 +1344,70 @@ function isOffsite(r){
   if(org === '' || region === '') return false;
   return !HQ_SITES.some(site => region.includes(site));
 }
-  
+
 function renderOffsiteDispatchCard(active){
-  const offsite = active.filter(r => {
-    const org = (r['파견조직코드명'] || '').trim();
-    const region = (r['파견지역'] || '').trim();
-    return org !== '' && region !== '' && !HQ_SITES.includes(region);
-  });
+  const offsite = active.filter(isOffsite);
 
   if(offsite.length === 0){
-    document.getElementById('offsiteContent').innerHTML = '<div class="empty-state">사외파견 인원이 없습니다</div>';
-    document.getElementById('offsiteNote').textContent = '사외 파견지역 기준 총 0명';
+    document.getElementById('offsiteContent').innerHTML = '<div class="empty-state">본사업장 외 지역 파견 인원이 없습니다</div>';
+    document.getElementById('offsiteNote').textContent = '본사업장(서울·구미) 외 파견지역 기준 · 총 0명';
     return;
   }
 
-  const rows = offsite 
-    .slice()
-    .sort((a,b) => (a['파견지역']||'').localeCompare(b['파견지역']||'', 'ko') || (a['성명']||'').localeCompare(b['성명']||'', 'ko'))
-    .map(r => `<tr>
-      <td>${r['성명'] || '-'}</td>
-      <td>${r['직급명'] || '-'}</td>
-      <td>${r['원소속부서'] || '-'}</td>
-      <td>${r['파견지역'] || '-'}</td>
-      <td>${r['파견조직코드명'] || '-'}</td>
-      <td>${r['파견내용'] || '-'}</td>
-      <td>${r['파견종료예정일'] || '-'}</td>
-    </tr>`).join('');
-  
-  document.getElementById('offsiteContent').innerHTML = `
-    <table class="tbl">
-      <tr><th>성명</th><th>직위</th><th>원소속부서</th><th>파견지역</th><th>파견조직</th><th>파견내용</th><th>파견종료예정일</th></tr>
-      ${rows}
-    </table>`;
+  const base = baseDate();
+  const in3m = new Date(base);
+  in3m.setMonth(in3m.getMonth() + 3);
+  const isEndingSoon = r => {
+    const d = parseYMD(r['파견종료예정일']);
+    return d && d >= base && d <= in3m;
+  };
+  const soonCount = offsite.filter(isEndingSoon).length;
 
-  document.getElementById('offsiteNote').textContent = 
-    `사외 파견지역 기준 총 ${offsite.length}명`;
+  // 지역 → 팀 → 직위 순으로 묶기
+  const byRegion = {};
+  offsite.forEach(r => {
+    const region = (r['파견지역'] || '').trim();
+    const team = r['원소속부서'] || '미상';
+    const pos = r['직급명'] || r['직위코드명'] || '미상';
+    byRegion[region] = byRegion[region] || {};
+    byRegion[region][team] = byRegion[region][team] || {};
+    (byRegion[region][team][pos] = byRegion[region][team][pos] || []).push(r);
+  });
+
+  const regionsHtml = Object.keys(byRegion).sort((a,b) => a.localeCompare(b,'ko')).map(region => {
+    const teams = byRegion[region];
+    const regionCount = Object.values(teams)
+      .reduce((s, posMap) => s + Object.values(posMap).reduce((s2, list) => s2 + list.length, 0), 0);
+
+    const teamsHtml = Object.keys(teams).sort((a,b) => a.localeCompare(b,'ko')).map(team => {
+      const posMap = teams[team];
+      const teamCount = Object.values(posMap).reduce((s, list) => s + list.length, 0);
+
+      const posHtml = Object.keys(posMap).sort((a,b) => a.localeCompare(b,'ko')).map(pos => {
+        const names = posMap[pos].map(r => {
+          const endDate = fmtYMD(parseYMD(r['파견종료예정일']));
+          const label = r['성명'] + (endDate ? `(~${endDate})` : '');
+          return isEndingSoon(r)
+            ? `<span style="background:#E6F7F2;color:#16876F;padding:1px 5px;border-radius:4px;">${label}</span>`
+            : label;
+        }).join(', ');
+        return `<div class="offsite-pos-row"><b>${pos}</b>${names}</div>`;
+      }).join('');
+
+      return `<div class="dept-group-head">${team}<b>${teamCount}명</b></div>${posHtml}`;
+    }).join('');
+
+    return `<div class="offsite-region-head">${region}<b>${regionCount}명</b></div>${teamsHtml}`;
+  }).join('');
+
+  const soonBadge = soonCount
+    ? `<span class="badge" style="background:#E6F7F2;color:#16876F;">3개월 내 파견종료 ${soonCount}명</span>` : '';
+
+  document.getElementById('offsiteContent').innerHTML =
+    (soonBadge ? `<div class="badge-row">${soonBadge}</div>` : '') + regionsHtml;
+
+  document.getElementById('offsiteNote').textContent =
+    `본사업장(서울·구미) 외 파견지역 기준 · 총 ${offsite.length}명`;
 }  
   
 function renderTenureCards(active){

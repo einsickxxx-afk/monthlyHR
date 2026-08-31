@@ -257,6 +257,7 @@
     <button type="button" class="page-tab active" id="tabBtn1" onclick="showPage(1)">1p 개요</button>
     <button type="button" class="page-tab" id="tabBtn2" onclick="showPage(2)">2p 휴직 인원</button>
     <button type="button" class="page-tab" id="tabBtn3" onclick="showPage(3)">3p 정년·임금피크</button>
+    <button type="button" class="page-tab" id="tabBtn4" onclick="showPage(4)">4p 사외파견인원현황</button>
   </div>
 
   <div class="page active" id="page1">
@@ -396,6 +397,17 @@
   </div>
   </div><!-- /page3 -->
 
+  <div class="page" id="page4">
+    <div class="grid">
+
+      <div class="card" style="width:100%;">
+        <div class="card-title"><span class="tab" style="background:#7C5FD1"></span><h2>사외파견 인원 현황</h2><span class="note" id="offsiteNote">파견지역 기준 분류</span></div>
+        <div id="offsiteContent" class="card-body"><div class="empty-state">당월 명부 CSV를 올리면 표시됩니다</div></div>
+      </div>
+      
+    </div>
+    </div><!-- /page4 -->
+  
   <div class="footer" id="footerNote">CSV를 업로드하면 이 대시보드의 모든 수치가 자동 계산됩니다 · 색상 테마는 상단 패널에서 변경 가능</div>
 
 <script>
@@ -711,6 +723,7 @@ function renderAllFromCurrent(){
   renderJobCard(active);
   renderEduCard(active);
   renderDispatchCard(active);
+  renderOffsiteDispatchCard(active);
   renderTenureCards(active);
   renderLevelCard(active);
   renderRetireForecastCard(active);
@@ -728,9 +741,11 @@ function showPage(n){
   document.getElementById('page1').classList.toggle('active', n === 1);
   document.getElementById('page2').classList.toggle('active', n === 2);
   document.getElementById('page3').classList.toggle('active', n === 3);
+  document.getElementById('page4').classList.toggle('active', n === 4);
   document.getElementById('tabBtn1').classList.toggle('active', n === 1);
   document.getElementById('tabBtn2').classList.toggle('active', n === 2);
   document.getElementById('tabBtn3').classList.toggle('active', n === 3);
+  document.getElementByID('tabBtn4').classList.toggle('active', n === 4);
 }
 
 /* ===================================================================
@@ -1310,6 +1325,46 @@ function hideDispatchTooltip(){
     delete tip.dataset.region;
   }
 }
+
+/* 4-2b. 사외파견 인원 현황(4p) - 파견 등록 인원 중, 파견지역이 사업장이 아닌
+  인원만 걸러 표로 보여줍니다. HQ_SITES 통해 사업장명 전환. */
+const HQ_SITES = ['서울', '서울2', '구미'];
+
+function renderOffsiteDispatchCard(active){
+  const offsite = active.filter(r => {
+    const org = (r['파견조직코드명'] || '').trim();
+    const region = (r['파견지역'] || '').trim();
+    return org !== '' && region !== '' && !HQ_SITES.includes(region);
+  });
+
+  if(offsite.length === 0){
+    document.getElementById('offsiteContent').innerHTML = '<div class="empty-state">사외파견 인원이 없습니다</div>';
+    document.getElementById('offsiteNote').textContent = '사외 파견지역 기준 총 0명';
+    return;
+  }
+
+  const rows = offsite 
+    .slice()
+    .sort((a,b) => (a['파견지역']||'').localeCompare(b['파견지역']||'', 'ko') || (a['성명']||'').localeCompare(b['성명']||'', 'ko'))
+    .map(r => `<tr>
+      <td>${r['성명'] || '-'}</td>
+      <td>${r['직급명'] || '-'}</td>
+      <td>${r['원소속부서'] || '-'}</td>
+      <td>${r['파견지역'] || '-'}</td>
+      <td>${r['파견조직코드명'] || '-'}</td>
+      <td>${r['파견내용'] || '-'}</td>
+      <td>${r['파견종료예정일'] || '-'}</td>
+    </tr>`).join('');
+  
+  document.getElementById('offsiteContent').innerHTML = `
+    <table class="tbl">
+      <tr><th>성명</th><th>직위</th><th>원소속부서</th><th>파견지역</th><th>파견조직</th><th>파견내용</th><th>파견종료예정일</th></tr>
+      ${rows}
+    </table>`;
+
+  document.getElementById('offsiteNote').textContent = 
+    `사외 파견지역 기준 총 ${offsite.length}명`;
+}  
   
 function renderTenureCards(active){
   const base = baseDate();

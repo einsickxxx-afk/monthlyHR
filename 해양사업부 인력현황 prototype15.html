@@ -1587,7 +1587,7 @@ function calcTenureYears(hireStr, resignStr){
 }
 function renderRetireeCard(){
   const rows = state.retirees;
-  document.getElementById('retireeNote').textContent = `총 ${rows.length}명 · 연1회 초기화 · 수기 관리`;
+  document.getElementById('retireeNote').textContent = `총 ${rows.length}명`;
   document.getElementById('retireeTbody').innerHTML = rows.map((r, i) => {
     const tenure = calcTenureYears(r.hire, r.resign);
     const hireDisplay = r.hire

@@ -1612,7 +1612,7 @@ function renderRetireeCard(){
       <td><input value="${esc(r.dest||'')}" onchange="onRetireeFieldChange(${i},'dest',this.value)" style="width:90px;"/></td>
       <td>
         <select onchange="onRetireeFieldChange(${i},'type',this.value)">
-          ${['자발','권고사직','정년','계약만료'].map(t => `<option value="${t}" ${r.type===t?'selected':''}>${t}</option>`).join('')}
+          ${['의원면직','정년퇴직','계약만료'].map(t => `<option value="${t}" ${r.type===t?'selected':''}>${t}</option>`).join('')}
         </select>
       </td>
       <td><button type="button" onclick="removeRetireeRow(${i})" style="color:var(--neg);">삭제</button></td>
@@ -1620,7 +1620,7 @@ function renderRetireeCard(){
   }).join('');
 }
 function addRetireeRow(){
-  state.retirees.push({ name:'', dept:'', title:'', hire:'', resign:'', edu:'', school:'', major:'', reason:'', dest:'', type:'자발' });
+  state.retirees.push({ name:'', dept:'', title:'', hire:'', resign:'', edu:'', school:'', major:'', reason:'', dest:'', type:'의원면직' });
   renderRetireeCard();
 }
 function removeRetireeRow(idx){

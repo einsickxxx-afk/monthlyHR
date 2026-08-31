@@ -374,6 +374,25 @@
       <div id="contractContent" class="card-body"><div class="empty-state">당월 명부 CSV를 올리면 표시됩니다</div></div>
     </div>
 
+    <div class="card" style="width:100%;">
+      <div class="card-title"><span class="tab" style="background:#C6431E"></span><h2>퇴직자 누적관리</h2><span class="note" id="retireeNote">연단위 관리</span></div>
+      <div id="retireeContent" class="card-body">
+        <div style="overflow-x:auto;">
+          <table class="tbl" id="retireeTable">
+            <thead>
+              <tr>
+                <th>No.</th><th>퇴직연월</th><th>성명</th><th>소속부서</th><th>직위</th>
+                <th>입사일</th><th>퇴직일자</th><th>최종학력</th><th>최종학교</th><th>최종전공</th>
+                <th>퇴사사유</th><th>이직처</th><th>퇴직구분</th><th></th>
+              </tr>
+            </thead>
+            <tbody id="retireeTbody"></tbody>
+          </table>
+        </div>
+        <button type="button" onclick="addRetireeRow()" style="margin-top:8px;">+ 행 추가</button>
+      </div>
+    </div>
+
   </div>
   </div><!-- /page3 -->
 
@@ -471,7 +490,7 @@ function themeColors(){
 /* ===================================================================
    2. CSV 파싱 & 상태
    =================================================================== */
-const state = { curr: null, prev: null, contractDates: {} };
+const state = { curr: null, prev: null, contractDates: {}, retirees: [] };
 
 function parseCsvText(text){
   const lines = text.split(/\r?\n/).filter(l => l.length > 0);
@@ -1549,6 +1568,8 @@ function onContractDateChange(empId, field, value){
   state.contractDates[empId][field] = value;
   renderContractCard(state.curr.filter(r => isMarine(r['원소속부서']) && r['재직상태']==='재직'));
 }
+
+
   
 /* ===================================================================
    5. 전월/당월 비교 카드 (인력증감내역 · 발령 변동사항)

@@ -1,0 +1,62 @@
+/* 4-8. 퇴직자 누적관리 (3p) — 전사명부에 퇴직자가 남지 않아 전량 수기 입력.
+   입사일·퇴직일자를 넣으면 "YY.MM.DD(근속연수 만 X.X년)" 형식으로 자동 표시하고,
+   퇴직연월도 퇴직일자에서 자동 산출합니다. */
+function fmtYYMMDD(dateStr){
+  const d = parseYMD(dateStr);
+  if(!d) return '';
+  const yy = String(d.getFullYear()).slice(-2);
+  const mm = String(d.getMonth()+1).padStart(2,'0');
+  const dd = String(d.getDate()).padStart(2,'0');
+  return `${yy}.${mm}.${dd}`;
+}
+function calcTenureYears(hireStr, resignStr){
+  const hire = parseYMD(hireStr), resign = parseYMD(resignStr);
+  if(!hire || !resign || resign < hire) return null;
+  return (resign - hire) / (1000*60*60*24*365.25);
+}
+function renderRetireeCard(){
+  const rows = state.retirees;
+  document.getElementById('retireeNote').textContent = `총 ${rows.length}명 · 연1회 초기화 · 수기 관리`;
+  document.getElementById('retireeTbody').innerHTML = rows.map((r, i) => {
+    const tenure = calcTenureYears(r.hire, r.resign);
+    const hireDisplay = r.hire
+      ? fmtYYMMDD(r.hire) + (tenure !== null ? `(근속연수 만 ${tenure.toFixed(1)}년)` : '')
+      : '';
+    const resignYM = r.resign ? fmtYYMMDD(r.resign).slice(0,5) : '';
+    return `<tr>
+      <td>${i+1}</td>
+      <td>${resignYM}</td>
+      <td><input value="${esc(r.name||'')}" onchange="onRetireeFieldChange(${i},'name',this.value)" style="width:70px;"/></td>
+      <td><input value="${esc(r.dept||'')}" onchange="onRetireeFieldChange(${i},'dept',this.value)" style="width:90px;"/></td>
+      <td><input value="${esc(r.title||'')}" onchange="onRetireeFieldChange(${i},'title',this.value)" style="width:60px;"/></td>
+      <td>
+        <input type="date" value="${r.hire||''}" onchange="onRetireeFieldChange(${i},'hire',this.value)" style="font-size:11px;"/>
+        <div style="font-size:10.5px;color:var(--mute);">${hireDisplay}</div>
+      </td>
+      <td><input type="date" value="${r.resign||''}" onchange="onRetireeFieldChange(${i},'resign',this.value)" style="font-size:11px;"/></td>
+      <td><input value="${esc(r.edu||'')}" onchange="onRetireeFieldChange(${i},'edu',this.value)" style="width:60px;"/></td>
+      <td><input value="${esc(r.school||'')}" onchange="onRetireeFieldChange(${i},'school',this.value)" style="width:80px;"/></td>
+      <td><input value="${esc(r.major||'')}" onchange="onRetireeFieldChange(${i},'major',this.value)" style="width:80px;"/></td>
+      <td><input value="${esc(r.reason||'')}" onchange="onRetireeFieldChange(${i},'reason',this.value)" style="width:90px;"/></td>
+      <td><input value="${esc(r.dest||'')}" onchange="onRetireeFieldChange(${i},'dest',this.value)" style="width:90px;"/></td>
+      <td>
+        <select onchange="onRetireeFieldChange(${i},'type',this.value)">
+          ${['자발','권고사직','정년','계약만료'].map(t => `<option value="${t}" ${r.type===t?'selected':''}>${t}</option>`).join('')}
+        </select>
+      </td>
+      <td><button type="button" onclick="removeRetireeRow(${i})" style="color:var(--neg);">삭제</button></td>
+    </tr>`;
+  }).join('');
+}
+function addRetireeRow(){
+  state.retirees.push({ name:'', dept:'', title:'', hire:'', resign:'', edu:'', school:'', major:'', reason:'', dest:'', type:'자발' });
+  renderRetireeCard();
+}
+function removeRetireeRow(idx){
+  state.retirees.splice(idx, 1);
+  renderRetireeCard();
+}
+function onRetireeFieldChange(idx, field, value){
+  state.retirees[idx][field] = value;
+  renderRetireeCard();
+}

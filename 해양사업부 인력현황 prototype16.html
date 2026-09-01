@@ -1651,8 +1651,8 @@ function renderContractCard(active){
     const endDate = parseYMD(saved.end);
     const isSoon = endDate && endDate >= today && endDate <= in3m;
     const isPast = endDate && endDate < today;
-    const startCell = readOnly ? (saved.start || '-') : `<input type="date" value="${saved.start || ''}" onchange="onContractDateChange('${esc(p.id)}','start',this.value)" style="font-size:11px;paddinf:3px;"/>`;
-    const endCell = readOnly ? (saved.end || '-') : `<input type="date" value="${saved.end || ''}" onchange="onContractDateChange('${esc(p.id)}','end',this.value)" style="font-size:11px;padding:3px;"/>`;
+    const startCell = readOnly ? (saved.start || '-') : `<input type="date" inputmode="numeric" maxlength="8" placeholder="YYYYMMDD" value="${saved.start || ''}" onchange="onContractDateChange('${esc(p.id)}}','start',this.value)" style="font-size:12.5px;padding:5px 6px;width:76px;"/>`;
+    const endCell = readOnly ? (saved.end || '-') : `<input type="date" inputmode="numeric" maxlength="8" placeholder="YYYYMMDD" value="${saved.end || ''}" onchange="onContractDateChange('${esc(p.id)}}','end',this.value)" style="font-size:12.5px;padding:5px 6px;width:76px;"/>`;
     return `<tr${isPast ? ' style="background:#FDEDE8;"' : (isSoon ? ' style="background:#FDF3E7;"' : '')}>
       <td>${p.name}</td>
       <td>${p.org}</td>
@@ -1743,10 +1743,10 @@ function renderRetireeCard(){
       <td><input value="${esc(r.dept||'')}" onchange="onRetireeFieldChange(${i},'dept',this.value)" style="width:90px;"/></td>
       <td><input value="${esc(r.title||'')}" onchange="onRetireeFieldChange(${i},'title',this.value)" style="width:60px;"/></td>
       <td>
-        <input type="date" value="${r.hire||''}" onchange="onRetireeFieldChange(${i},'hire',this.value)" style="font-size:11px;"/>
+        <input type="date" inputmode="numeric" maxlength="8" placeholder="YYYYMMDD" value="${r.hire||''}" onchange="onRetireeFieldChange(${i},'hire',this.value)" style="font-size:12.5px;padding:5px 6px;width:76px;"/>`;
         <div style="font-size:10.5px;color:var(--mute);">${hireDisplay}</div>
       </td>
-      <td><input type="date" value="${r.resign||''}" onchange="onRetireeFieldChange(${i},'resign',this.value)" style="font-size:11px;"/></td>
+      <td><input type="date" inputmode="numeric" maxlength="8" placeholder="YYYYMMDD" value="${r.resign||''}" onchange="onRetireeFieldChange(${i},'resign',this.value)" style="font-size:12.5px;padding:5px 6px;width:76px;"/></td>
       <td><input value="${esc(r.edu||'')}" onchange="onRetireeFieldChange(${i},'edu',this.value)" style="width:60px;"/></td>
       <td><input value="${esc(r.school||'')}" onchange="onRetireeFieldChange(${i},'school',this.value)" style="width:80px;"/></td>
       <td><input value="${esc(r.major||'')}" onchange="onRetireeFieldChange(${i},'major',this.value)" style="width:80px;"/></td>

@@ -1638,9 +1638,6 @@ function renderContractCard(active){
   const readOnly = !!window.__EMBEDDED_SNAPSHOT_MODE;
 
   if(people.length === 0){
-    document.getElementById('contractContent').innerHTML = '<div class="empty-state">
-
-  if(people.length === 0){
     document.getElementById('contractContent').innerHTML = '<div class="empty-state">계약직 인원이 없습니다</div>';
     document.getElementById('contractNote').textContent = '총 0명';
     return;
@@ -1651,10 +1648,10 @@ function renderContractCard(active){
   const rows = people.map(p => {
     const saved = state.contractDates[p.id] || {};
     const endDate = parseYMD(saved.end);
-    const isSoon = endDate && (endDate - today) / (1000*60*60*24) <= 60 && (endDate - today) >= 0;
+    const isSoon = endDate && endDate >= today && endDate =< in3m;
     const isPast = endDate && endDate < today;
     const startCell = readOnly ? (saved.start || '-') : `<input type="date" value="${saved.start || ''}" onchange="onContractDateChange('${esc(p.id)}','start',this.value)" style="font-size:11px;paddinf:3px;"/>`;
-    const endCell = readOnly ? (saved.end || '-') : `<input type="date" value="${saved.end || ''}" onchange="onContractDateChange('${esc(p/id)}','end',this.value)" style="font-size:11px;padding:3px;"/>`;
+    const endCell = readOnly ? (saved.end || '-') : `<input type="date" value="${saved.end || ''}" onchange="onContractDateChange('${esc(p.id)}','end',this.value)" style="font-size:11px;padding:3px;"/>`;
     return `<tr${isPast ? ' style="background:#FDEDE8;"' : (isSoon ? ' style="background:#FDF3E7;"' : '')}>
       <td>${p.name}</td>
       <td>${p.org}</td>
@@ -1679,13 +1676,6 @@ function renderContractCard(active){
 
   document.getElementById('contractNote').textContent =
     `총 ${people.length}명` + (readOnly ? '' : '날짜 수기 기입');
-
-  const soonCount = people.filter(p => {
-    const d = parseYMD((state.contractDates[p.id]||{}).end);
-    return d && (d - today) / (1000*60*60*24) <= 60 && (d - today) >= 0;
-  }).length;
-  document.getElementById('contractNote').textContent =
-    `총 ${people.length}명(직급코드 G 기준)` + (soonCount ? ` · 60일 이내 만료 ${soonCount}명` : '') + ' · 날짜는 직접 입력, 저장 시 파일에 함께 보관됩니다';
 }
 
 function onContractDateChange(empId, field, value){

@@ -310,7 +310,7 @@
     </div>
 
     <!-- 부서별 인원현황 -->
-    <div class="card w-half">
+    <div class="card" style="width:100%;">
       <div class="card-title"><span class="tab"></span><h2>부서별 인원현황</h2><span class="note" id="deptNote">원소속부서 기준</span></div>
       <div id="deptContent" class="card-body"><div class="empty-state">당월 명부 CSV를 올리면 표시됩니다</div></div>
     </div>
@@ -1129,7 +1129,7 @@ function buildOrgChartSvg(branches){
   });
 
   // width:100%/height:auto로 카드 폭에 맞춰 자동으로 축소·확대됩니다(가로 스크롤 불필요).
-  return `<div style="width:100%;overflow-x:auto;"><svg viewBox="0 0 ${totalW} ${totalH}" width="${totalW}" height="${totalH}" style="width:100%;min-width:380px;height:auto;display:block;">${svg}</svg></div>`;
+  return `<svg viewBox="0 0 ${totalW} ${totalH}" width="${totalW}" height="${totalH}" style="width:100%;heigth:auto;display:block;">${svg}</svg>`;
 }
 // key: 'ROOT'(전체), 'GRP:해양연구소'/'GRP:SV사업센터'(조직 전체 합산), 그 외에는 팀명 그대로.
 function getRosterRows(key){
@@ -1514,7 +1514,7 @@ function renderRetireForecastCard(active){
   const forecast = countRetireYearly(active, base);
   window.__retireForecast = forecast;
 
-  const in3m = new Date(base); in3m.setMonth(in3m,getMonth() + 3);
+  const in3m = new Date(base); in3m.setMonth(in3m.getMonth() + 3);
   const isSoon = p => p.arriveDate >= base && p.arriveDate <= in3m;
   const soonCount = 
     Object.values(forecast.retirePeople).flat().filter(isSoon).length + 

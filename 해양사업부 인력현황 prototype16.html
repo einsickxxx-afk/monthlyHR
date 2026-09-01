@@ -2188,8 +2188,15 @@ function exportSnapshot(){
     // 기준일을 고정 텍스트로 바꿔, 저장본을 열었을 때 오늘 날짜로 리셋되지 않게 합니다.
     const metaEl = clone.querySelector('.meta');
     const dateVal = document.getElementById('reportDate').value || today_ISO();
-    if(metaEl) metaEl.innerHTML = '기준일 ' + dateVal + ' (저장 시점 고정)';
-
+    if(metaEl){
+      const reportDateInput = metaEl.querySelector('#reportDate');
+      if(reportDateInput) reportDateInput.value = dateVal;
+      const fixedNote = document.createElement('span');
+      fixedNote.style.cssText = 'margin-left:8px;color:var(--mute);font-size:11px;';
+      fixedNote.textContent = '(저장 시점 고정)';
+      metaEl.appendChild(fixedNote);
+    }
+      
     const footer = clone.querySelector('#footerNote');
     if(footer) footer.textContent = new Date().toLocaleString('ko-KR') + ' 저장된 정적 스냅샷입니다 · 다시 열면 저장 시점 CSV로 자동 재렌더링되며, 클릭 시 명단·툴팁도 정상 동작합니다.';
 

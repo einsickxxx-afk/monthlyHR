@@ -396,7 +396,7 @@
             <tbody id="retireeTbody"></tbody>
           </table>
         </div>
-        <button type="button" onclick="addRetireeBtn" onclick="addRetireeRow()" style="margin-top:8px;">+ 행 추가</button>
+        <button type="button" id="addRetireeBtn" onclick="addRetireeRow()" style="margin-top:8px;">+ 행 추가</button>
       </div>
     </div>
 
@@ -1702,7 +1702,7 @@ function calcTenureYears(hireStr, resignStr){
 }
 function renderRetireeCard(){
   const rows = state.retirees;
-  const readOnly = !window.__EMBEDDED_SNAPSHOT_MODE;
+  const readOnly = !!window.__EMBEDDED_SNAPSHOT_MODE;
   document.getElementById('retireeNote').textContent = `총 ${rows.length}명`;
 
   const addBtn = document.getElementById('addRetireeBtn');

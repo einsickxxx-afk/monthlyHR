@@ -396,7 +396,7 @@
             <tbody id="retireeTbody"></tbody>
           </table>
         </div>
-        <button type="button" onclick="addRetireeRow()" style="margin-top:8px;">+ 행 추가</button>
+        <button type="button" onclick="addRetireeBtn" onclick="addRetireeRow()" style="margin-top:8px;">+ 행 추가</button>
       </div>
     </div>
 
@@ -1027,10 +1027,10 @@ function renderDeptCard(active){
 // 루트·중간노드(해양연구소/SV사업센터)·직속조직 목록박스는 가로쓰기를 유지합니다.
 // viewBox 기반으로 만들어 카드 폭에 맞게 자동으로 축소/확대됩니다.
 function buildOrgChartSvg(branches){
-  const COL_W = 26, LINE_H = 13, V_PAD = 26;
-  const GAP = 7, GROUP_GAP = 18, LINE = '#98A2B3';
-  const MID_W = 140, MID_H = 42, ROOT_W = 160, ROOT_H = 46;
-  const LIST_W = 122, LIST_HEADER_H = 18, LIST_ROW_H = 20, LIST_PAD = 8;
+  const COL_W = 22, LINE_H = 11, V_PAD = 20;
+  const GAP = 6, GROUP_GAP = 14, LINE = '#98A2B3';
+  const MID_W = 118, MID_H = 36, ROOT_W = 134, ROOT_H = 40;
+  const LIST_W = 104, LIST_HEADER_H = 16, LIST_ROW_H = 18, LIST_PAD = 7;
 
   // 세로쓰기 박스 치수 — 글자 수만큼 세로로 쌓이며, 폭은 항상 한 열(COL_W)로 고정합니다.
   // (긴 이름을 억지로 2열로 접으면 줄바꿈 지점이 어색해져서, 대신 박스 높이만 늘립니다.)
@@ -1082,10 +1082,10 @@ function buildOrgChartSvg(branches){
       const startY = cy - V_PAD/2 - (chars.length-1)*LINE_H/2 + fontSize/3;
       textEl = `<text x="${cx}" y="${startY}" text-anchor="middle" font-size="${fontSize}" fill="${tc}">` +
         chars.map((ch,i) => `<tspan x="${cx}" dy="${i===0?0:LINE_H}">${ch}</tspan>`).join('') + `</text>` +
-        (count != null ? `<text x="${cx}" y="${top+h-9}" text-anchor="middle" font-size="9" font-weight="700" fill="${tc}">${count}명</text>` : '');
+        (count != null ? `<text x="${cx}" y="${top+h-9}" text-anchor="middle" font-size="8" font-weight="700" fill="${tc}">${count}명</text>` : '');
     } else {
       textEl = `<text x="${cx}" y="${cy - (count!=null?6:0)}" text-anchor="middle" font-size="${fontSize}" font-weight="700" fill="${tc}">${label}</text>` +
-        (count != null ? `<text x="${cx}" y="${cy+12}" text-anchor="middle" font-size="10" fill="${tc}" opacity="0.85">${count}명</text>` : '');
+        (count != null ? `<text x="${cx}" y="${cy+12}" text-anchor="middle" font-size="9" fill="${tc}" opacity="0.85">${count}명</text>` : '');
     }
     return `<g${clickAttr}>
       <rect x="${cx-w/2}" y="${top}" width="${w}" height="${h}" rx="4" fill="${fc}" stroke="${ec}" stroke-width="1.6"/>
@@ -1096,20 +1096,20 @@ function buildOrgChartSvg(branches){
   // 정부조직도의 '비서실'처럼, 직속조직은 개별 가지 대신 하나의 목록형 박스로 묶어 표시합니다.
   function listBox(cx, top, w, h, groupLabel, rows, color){
     let inner = `<rect x="${cx-w/2}" y="${top}" width="${w}" height="${h}" rx="4" fill="white" stroke="${color}" stroke-width="1.6"/>`;
-    inner += `<text x="${cx}" y="${top+LIST_HEADER_H-5}" text-anchor="middle" font-size="11" font-weight="700" fill="#1D2939">${groupLabel}</text>`;
+    inner += `<text x="${cx}" y="${top+LIST_HEADER_H-5}" text-anchor="middle" font-size="10" font-weight="700" fill="#1D2939">${groupLabel}</text>`;
     inner += `<line x1="${cx-w/2+6}" y1="${top+LIST_HEADER_H}" x2="${cx+w/2-6}" y2="${top+LIST_HEADER_H}" stroke="#E4E7EC" stroke-width="1"/>`;
     rows.forEach((r,i) => {
       const ry = top + LIST_HEADER_H + LIST_PAD + i*LIST_ROW_H + LIST_ROW_H/2;
       inner += `<g class="org-node" style="cursor:pointer;" onclick="toggleRosterTooltip(event, '${esc(r.key)}', '${esc(r.label)}')">
         <rect x="${cx-w/2+2}" y="${ry-LIST_ROW_H/2+1}" width="${w-4}" height="${LIST_ROW_H-2}" fill="transparent"/>
-        <text x="${cx-w/2+8}" y="${ry+3.5}" font-size="10" fill="#344054">${r.label}</text>
-        <text x="${cx+w/2-8}" y="${ry+3.5}" text-anchor="end" font-size="10" font-weight="700" fill="${color}">${r.count}명</text>
+        <text x="${cx-w/2+8}" y="${ry+3.5}" font-size="9" fill="#344054">${r.label}</text>
+        <text x="${cx+w/2-8}" y="${ry+3.5}" text-anchor="end" font-size="9" font-weight="700" fill="${color}">${r.count}명</text>
       </g>`;
     });
     return inner;
   }
 
-  svg += rectBox(rootX, rootTop, ROOT_W, ROOT_H, 'ROOT', '해양사업부장', null, '#1D2939', 'white', '#1D2939', false, 13.5);
+  svg += rectBox(rootX, rootTop, ROOT_W, ROOT_H, 'ROOT', '해양사업부장', null, '#1D2939', 'white', '#1D2939', false, 12);
   elbow(rootX, rootTop+ROOT_H, centers, l1Top);
 
   branches.forEach((b, i) => {
@@ -1118,18 +1118,18 @@ function buildOrgChartSvg(branches){
       svg += listBox(cx, l1Top, LIST_W, listH, b.label, b.rows, b.color);
       return;
     }
-    svg += rectBox(cx, l1Top, MID_W, MID_H, b.key, b.label, b.count, 'white', '#1D2939', b.color, false, 12);
+    svg += rectBox(cx, l1Top, MID_W, MID_H, b.key, b.label, b.count, 'white', '#1D2939', b.color, false, 11);
     const widths = b.children.map(c => c.dims.w);
     let x = cx - slotWidths[i]/2;
     const xs = widths.map(w => { const center = x + w/2; x += w + GAP; return center; });
     elbow(cx, l1Top+MID_H, xs, l2Top);
     b.children.forEach((c, j) => {
-      svg += rectBox(xs[j], l2Top, c.dims.w, c.dims.h, c.key, c.label, c.count, 'white', '#1D2939', c.color, true, 10.5);
+      svg += rectBox(xs[j], l2Top, c.dims.w, c.dims.h, c.key, c.label, c.count, 'white', '#1D2939', c.color, true, 9.5);
     });
   });
 
   // width:100%/height:auto로 카드 폭에 맞춰 자동으로 축소·확대됩니다(가로 스크롤 불필요).
-  return `<svg viewBox="0 0 ${totalW} ${totalH}" width="${totalW}" height="${totalH}" style="width:100%;height:auto;display:block;">${svg}</svg>`;
+  return `<div style="width:100%;overflow-x:auto;"><svg viewBox="0 0 ${totalW} ${totalH}" width="${totalW}" height="${totalH}" style="width:100%;min-width:380px;height:auto;display:block;">${svg}</svg></div>`;
 }
 // key: 'ROOT'(전체), 'GRP:해양연구소'/'GRP:SV사업센터'(조직 전체 합산), 그 외에는 팀명 그대로.
 function getRosterRows(key){
@@ -1514,14 +1514,23 @@ function renderRetireForecastCard(active){
   const forecast = countRetireYearly(active, base);
   window.__retireForecast = forecast;
 
-  document.getElementById('retireForecastContent').innerHTML = buildRetireComboChart(forecast);
+  const in3m = new Date(base); in3m.setMonth(in3m,getMonth() + 3);
+  const isSoon = p => p.arriveDate >= base && p.arriveDate =< in3m;
+  const soonCount = 
+    Object.values(forecast.retirePeople).flat().filter(isSoon).length + 
+    Object.values(forecast.wagePeakPeople).flat().filter(isSoon).length;
+  const soonBadge = soonCount
+    ? `<div class="badge-row"><span class="badge" style="background:#E6F7F2;color:#16876F;">3개월 내 정년/임금피크 도래 ${soonCount}명</span></div>` : '';
+
+  document.getElementById('retireForecastContent').innerHTML = soonBadge + buildRetireComboChart(forecast);
   document.getElementById('retireForecastNote').textContent =
-    `기준일 ${fmtYMD(base)} · 막대=정년(만60세 도달월 말일), 꺾은선=임금피크(만57세 도달월 익월1일) · 임원 제외 · 막대/점 클릭 시 명단 표시`;
+    `기준일 ${fmtYMD(base)}/막대그래프는 정년, 꺾은선그래프는 임금피크 해당인원으로, 각 그래프 클릭 시 명단이 표시됨`;
 }
+    
 
 function buildRetireComboChart(forecast){
   const { years, retireCounts, wagePeakCounts } = forecast;
-  const BAR_W = 26, GAP = 22, LEFT = 42, RIGHT = 14, TOP = 14, CHART_H = 130, BOTTOM = 20;
+  const BAR_W = 20, GAP = 16, LEFT = 34, RIGHT = 10, TOP = 10, CHART_H = 92, BOTTOM = 16;
   const totalW = LEFT + RIGHT + years.length*(BAR_W+GAP) - GAP;
   const totalH = TOP + CHART_H + BOTTOM;
 
@@ -1560,7 +1569,7 @@ function buildRetireComboChart(forecast){
   });
 
   years.forEach((y,i) => {
-    svg += `<text x="${centers[i]}" y="${baseline+18}" text-anchor="middle" font-size="10" fill="#475467">${y}</text>`;
+    svg += `<text x="${centers[i]}" y="${baseline+16}" text-anchor="middle" font-size="9" fill="#475467">${y}</text>`;
   });
 
   const legend = `
@@ -1570,7 +1579,7 @@ function buildRetireComboChart(forecast){
     </div>`;
 
   return legend +
-    `<svg viewBox="0 0 ${totalW} ${totalH}" width="${totalW}" height="${totalH}" style="width:100%;height:auto;display:block;">${svg}</svg>` +
+    `<svg viewBox="0 0 ${totalW} ${totalH}" width="${totalW}" height="${totalH}" style="max-width:440px;width:100%;height:auto;display:block;margin:0 auto;">${svg}</svg>` +
     `<div id="retireTooltip" class="flow-tooltip" style="display:none;"></div>`;
 }
 
@@ -1626,33 +1635,50 @@ function getContractEmployees(active){
 
 function renderContractCard(active){
   const people = getContractEmployees(active);
+  const readOnly = !!window.__EMBEDDED_SNAPSHOT_MODE;
 
   if(people.length === 0){
-    document.getElementById('contractContent').innerHTML = '<div class="empty-state">직급코드 G로 시작하는 계약직 인원이 없습니다</div>';
+    document.getElementById('contractContent').innerHTML = '<div class="empty-state">
+
+  if(people.length === 0){
+    document.getElementById('contractContent').innerHTML = '<div class="empty-state">계약직 인원이 없습니다</div>';
     document.getElementById('contractNote').textContent = '총 0명';
     return;
   }
 
   const today = baseDate();
+  const in3m = new Date(today); in3m.setMonth(in3m.getMonth() + 3);
   const rows = people.map(p => {
     const saved = state.contractDates[p.id] || {};
     const endDate = parseYMD(saved.end);
     const isSoon = endDate && (endDate - today) / (1000*60*60*24) <= 60 && (endDate - today) >= 0;
     const isPast = endDate && endDate < today;
+    const startCell = readOnly ? (saved.start || '-') : `<input type="date" value="${saved.start || ''}" onchange="onContractDateChange('${esc(p.id)}','start',this.value)" style="font-size:11px;paddinf:3px;"/>`;
+    const endCell = readOnly ? (saved.end || '-') : `<input type="date" value="${saved.end || ''}" onchange="onContractDateChange('${esc(p/id)}','end',this.value)" style="font-size:11px;padding:3px;"/>`;
     return `<tr${isPast ? ' style="background:#FDEDE8;"' : (isSoon ? ' style="background:#FDF3E7;"' : '')}>
       <td>${p.name}</td>
       <td>${p.org}</td>
       <td>${p.title}</td>
-      <td><input type="date" value="${saved.start || ''}" onchange="onContractDateChange('${esc(p.id)}','start',this.value)" style="font-size:11px;padding:3px;"/></td>
-      <td><input type="date" value="${saved.end || ''}" onchange="onContractDateChange('${esc(p.id)}','end',this.value)" style="font-size:11px;padding:3px;"/></td>
+      <td>${startCell}</td>
+      <td>${endCell}</td>
     </tr>`;
   }).join('');
 
-  document.getElementById('contractContent').innerHTML = `
+  const soonCount = people.filter(p => {
+    const d = parseYMD((state.contractDates[p.id]||{}).end);
+    return d && d >= today && d =< in3m;
+  }).length;
+  const soonBadge = soonCount
+    ? `<div class="badge-row"><span class="badge" style="background:#E6F7F2;color:#16876F;">3개월 내 계약종료 ${soonCount}명</span></div>` : '';
+
+  document.getElementById('contractContent').innerHTML = soonBadge + `
     <table class="tbl">
       <tr><th>성명</th><th>원소속부서</th><th>직위</th><th>계약시작일</th><th>계약만료예정일</th></tr>
       ${rows}
     </table>`;
+
+  document.getElementById('contractNote').textContent =
+    `총 ${people.length}명` + (readOnly ? '' : '날짜 수기 기입');
 
   const soonCount = people.filter(p => {
     const d = parseYMD((state.contractDates[p.id]||{}).end);
@@ -1686,13 +1712,38 @@ function calcTenureYears(hireStr, resignStr){
 }
 function renderRetireeCard(){
   const rows = state.retirees;
+  const readOnly = !window.__EMBEDDED_SNAPSHOT_MODE;
   document.getElementById('retireeNote').textContent = `총 ${rows.length}명`;
+
+  const addBtn = document.getElementById('addRetireeBtn');
+  if(addBtn) addBtn.style.display = readOnly ? 'none' : '';
+
   document.getElementById('retireeTbody').innerHTML = rows.map((r, i) => {
     const tenure = calcTenureYears(r.hire, r.resign);
     const hireDisplay = r.hire
       ? fmtYYMMDD(r.hire) + (tenure !== null ? `(근속연수 만 ${tenure.toFixed(1)}년)` : '')
       : '';
     const resignYM = r.resign ? fmtYYMMDD(r.resign).slice(0,5) : '';
+
+    if(readOnly){
+      return `<tr>
+        <td>${i+1}</td>
+        <td>${resignYM}</td>
+        <td>${esc(r.name||'')}</td>
+        <td>${esc(r.dept||'')}</td>
+        <td>${esc(r.title||'')}</td>
+        <td>${hireDisplay}</td>
+        <td>${fmtYYMMDD(r.resign)}</td>
+        <td>${esc(r.edu||'')}</td>
+        <td>${esc(r.school||'')}</td>
+        <td>${esc(r.major||'')}</td>
+        <td>${esc(r.reason||'')}</td>
+        <td>${esc(r.dest||'')}</td>
+        <td>${esc(r.type||'')}</td>
+        <td></td>
+      </tr>`;
+    }
+
     return `<tr>
       <td>${i+1}</td>
       <td>${resignYM}</td>
@@ -1714,10 +1765,11 @@ function renderRetireeCard(){
           ${['의원면직','정년퇴직','계약만료'].map(t => `<option value="${t}" ${r.type===t?'selected':''}>${t}</option>`).join('')}
         </select>
       </td>
-      <td><button type="button" onclick="removeRetireeRow(${i})" style="color:var(--neg);">삭제</button></td>
+      <td><button type="button" onclick="removeRetireeROw(${i})" style="color:var(--neg):">삭제</button></td>
     </tr>`;
   }).join('');
 }
+  
 function addRetireeRow(){
   state.retirees.push({ name:'', dept:'', title:'', hire:'', resign:'', edu:'', school:'', major:'', reason:'', dest:'', type:'의원면직' });
   renderRetireeCard();
@@ -2109,7 +2161,9 @@ function exportSnapshot(){
       'window.__EMBEDDED_PREV_CSV = ' + JSON.stringify(prevCsv) + ';\n' +
       'window.__EMBEDDED_REPORT_DATE = ' + JSON.stringify(dateVal) + ';\n' +
       'window.__EMBEDDED_CONTRACT_DATES = ' + JSON.stringify(JSON.stringify(state.contractDates || {})) + ';\n' +
-      'window.__EMBEDDED_RETIREES = ' + JSON.stringify(JSON.stringify(state.retirees || [])) + ';';
+      'window.__EMBEDDED_RETIREES = ' + JSON.stringify(JSON.stringify(state.retirees || [])) + ';\n' +
+      'window.__EMBEDDED_SNAPSHOT_MODE = true;';
+
     // 본문 스크립트(init 포함)보다 먼저 실행되도록 head에 넣습니다.
     head.appendChild(embeddedScript);
 

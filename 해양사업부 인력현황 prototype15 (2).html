@@ -1514,7 +1514,7 @@ function renderRetireForecastCard(active){
   const forecast = countRetireYearly(active, base);
   window.__retireForecast = forecast;
 
-  const in3m = new Date(base); in3m.setMonth(in3m,getMonth() + 3);
+  const in3m = new Date(base); in3m.setMonth(in3m.getMonth() + 3);
   const isSoon = p => p.arriveDate >= base && p.arriveDate <= in3m;
   const soonCount = 
     Object.values(forecast.retirePeople).flat().filter(isSoon).length + 

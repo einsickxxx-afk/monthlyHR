@@ -1,0 +1,2135 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>해양사업부 인력현황 대시보드</title>
+<style>
+  :root{
+    --c1:#2F6FED; --c2:#6FA8FF; --c3:#BFD6FF; --c4:#DCE4F0;
+    --dark:#16233F; --bg:#F2F4F7; --card:#FFFFFF; --border:#E4E7EC;
+    --text:#101828; --sub:#667085; --mute:#98A2B3;
+    --pos:#1F9E89; --neg:#E4572E;
+  }
+  *{ margin:0; padding:0; box-sizing:border-box; }
+  html,body{ background:var(--bg); }
+  body{
+    font-family:'Pretendard Variable',Pretendard,-apple-system,BlinkMacSystemFont,'Apple SD Gothic Neo','Malgun Gothic',sans-serif;
+    color:var(--text);
+    padding:28px 32px 60px;
+    max-width:1440px;
+    margin:0 auto;
+  }
+
+  /* ===== Header ===== */
+  .header{
+    display:flex; justify-content:space-between; align-items:flex-start;
+    padding-bottom:18px; margin-bottom:16px; border-bottom:2px solid var(--dark);
+    flex-wrap:wrap; gap:16px;
+  }
+  .titlewrap{ display:flex; align-items:flex-start; }
+  .titlewrap .tab{ width:6px; height:36px; background:var(--c1); border-radius:1px; margin-right:12px; }
+  .titlewrap h1{ font-size:24px; font-weight:800; color:var(--dark); letter-spacing:-0.4px; }
+  .titlewrap .sub{ font-size:12.5px; color:var(--sub); margin-top:5px; }
+  .meta{ text-align:right; font-size:11.5px; color:var(--mute); line-height:1.7; display:flex; align-items:center; gap:8px; }
+  .meta input[type=date]{ font-family:inherit; font-size:12px; border:1px solid var(--border); border-radius:6px; padding:4px 8px; color:var(--dark); }
+
+  /* ===== Data upload bar ===== */
+  .data-bar{
+    background:var(--card); border:1px solid var(--border); border-radius:10px;
+    padding:14px 18px; margin-bottom:14px; display:flex; align-items:center; gap:18px; flex-wrap:wrap;
+  }
+  .data-bar .grp{ display:flex; align-items:center; gap:8px; }
+  .data-bar .req{ font-size:10px; font-weight:800; padding:2px 6px; border-radius:6px; }
+  .req.must{ background:#FDEDE8; color:#C6431E; }
+  .req.opt{ background:#EAF1FF; color:#2F6FED; }
+  .data-bar label.upbtn{
+    font-size:12px; font-weight:700; color:#fff; background:var(--c1);
+    padding:7px 14px; border-radius:8px; cursor:pointer; white-space:nowrap;
+  }
+  .data-bar input[type=file]{ display:none; }
+  .data-bar .fname{ font-size:11.5px; color:var(--sub); max-width:180px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .data-bar .status{ font-size:11px; padding:3px 9px; border-radius:10px; font-weight:700; }
+  .status.wait{ background:#F0F2F5; color:var(--mute); }
+  .status.ok{ background:#E6F7F2; color:#16876F; }
+  .data-bar .divider{ width:1px; height:26px; background:var(--border); }
+  .data-bar button.savebtn{
+    font-size:12px; font-weight:700; color:var(--dark); background:#fff;
+    border:1px solid var(--border); padding:7px 14px; border-radius:8px; cursor:pointer; white-space:nowrap;
+  }
+  .data-bar button.savebtn:hover{ background:#F7F9FC; }
+
+  .upload-err{
+    background:#FDEDE8; color:#C6431E; border:1px solid #F6C9BA; border-radius:8px;
+    padding:10px 14px; margin-bottom:14px; font-size:12px; font-weight:600; line-height:1.5;
+  }
+
+  /* ===== Theme control ===== */
+  .theme-panel{
+    background:var(--card); border:1px solid var(--border); border-radius:10px;
+    padding:10px 16px; display:flex; align-items:center; gap:14px; flex-wrap:wrap;
+    margin-bottom:20px; font-size:12px; color:var(--sub);
+  }
+  .theme-panel .label{ font-weight:700; color:var(--dark); }
+  .swatch{ width:24px; height:24px; border-radius:50%; cursor:pointer; border:2px solid #fff; box-shadow:0 0 0 1.5px var(--border); }
+  .swatch:hover{ transform:scale(1.1); }
+  .divider{ width:1px; height:22px; background:var(--border); }
+  .colorpick{ display:flex; align-items:center; gap:6px; }
+  .colorpick input[type=color]{ width:28px; height:28px; border:none; border-radius:7px; cursor:pointer; background:none; padding:0; }
+
+  /* ===== KPI ===== */
+  .kpi-row{ display:flex; gap:14px; margin-bottom:18px; flex-wrap:wrap; }
+  .kpi{ flex:1; min-width:220px; background:var(--dark); border-radius:10px; padding:16px 20px; color:#fff; }
+  .kpi.alt{ background:var(--card); border:1px solid var(--border); color:var(--text); }
+  .kpi .label{ font-size:11.5px; color:#B7C0D4; font-weight:600; }
+  .kpi.alt .label{ color:var(--sub); }
+  .kpi .value{ font-size:26px; font-weight:800; margin-top:6px; letter-spacing:-0.5px; }
+  .kpi .chip{ display:inline-block; font-size:11.5px; font-weight:700; margin-top:7px; padding:2px 8px; border-radius:11px; }
+  .chip.up{ background:rgba(31,158,137,.2); color:#2CC9A8; }
+  .chip.down{ background:rgba(228,87,46,.2); color:#FF9269; }
+  .chip.neutral{ background:rgba(255,255,255,.15); color:#D0D5DD; }
+  .kpi.alt .chip.up{ background:#E6F7F2; color:#16876F; }
+  .kpi.alt .chip.down{ background:#FDEDE8; color:#C6431E; }
+  .kpi.alt .chip.neutral{ background:#F0F2F5; color:var(--mute); }
+
+  /* ===== Grid / Card ===== */
+  .grid{ display:flex; flex-wrap:wrap; gap:14px; }
+  .card{ background:var(--card); border:1px solid var(--border); border-radius:10px; padding:18px 20px 20px; box-shadow:0 1px 2px rgba(16,24,40,.04); display:flex; flex-direction:column; }
+  .w-half{ width:calc(50% - 7px); }
+  /* 카드 높이가 옆 카드에 맞춰 늘어났을 때, 내용이 위쪽에만 붙지 않고 남는 공간 안에서 세로 중앙에 오도록 함 */
+  .card-body{ flex:1; display:flex; flex-direction:column; justify-content:center; }
+  .card-title{ display:flex; align-items:center; margin-bottom:14px; }
+  .card-title .tab{ width:4px; height:15px; border-radius:1px; margin-right:8px; background:var(--c1); }
+  .card-title h2{ font-size:14.5px; font-weight:700; color:var(--dark); }
+  .card-title .type{ margin-left:8px; font-size:9.5px; font-weight:800; padding:2px 6px; border-radius:8px; color:#fff; }
+  .card-title .note{ margin-left:auto; font-size:10.5px; color:var(--mute); }
+
+  .empty-state{ font-size:12.5px; color:var(--mute); text-align:center; padding:30px 10px; background:#F7F9FC; border-radius:8px; }
+
+  .barrow{ display:flex; align-items:center; margin-bottom:10px; }
+  .barrow .name{ width:118px; font-size:12px; color:#475467; flex-shrink:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .barrow .track{ flex:1; background:#F0F2F5; border-radius:4px; height:16px; position:relative; margin-right:10px; }
+  .barrow .fill{ position:absolute; left:0; top:0; height:100%; border-radius:4px; background:var(--c1); transition:background .25s,width .4s; }
+  .barrow .num{ width:60px; font-size:12px; font-weight:700; color:var(--dark); text-align:right; flex-shrink:0; }
+
+  /* 기준선(ceiling-tick) - 막대 트랙 위에 세로선 + 위쪽 깃발 모양으로 표시되는 평균값 마커 */
+  .track-mark{ position:absolute; top:-5px; bottom:-5px; width:0; border-left:2px dashed var(--neg); z-index:2; }
+  .track-mark-legend{ display:flex; align-items:center; gap:6px; font-size:11px; font-weight:700; color:var(--neg); margin-bottom:10px; }
+  .track-mark-swatch{ width:10px; height:2px; background:var(--neg); border-radius:1px; display:inline-block; }
+
+  /* 세로 막대 그래프 */
+  .vbar-wrap{ display:flex; align-items:flex-end; justify-content:space-between; height:150px; margin-top:6px; padding:0 4px; }
+  .vbar-col{ display:flex; flex-direction:column; align-items:center; flex:1; }
+  .vbar-track{ width:32px; height:110px; display:flex; align-items:flex-end; }
+  .vbar-fill{ width:100%; border-radius:4px 4px 0 0; background:var(--c1); transition:height .35s, background .25s; min-height:2px; }
+  .vbar-fill.neg{ background:var(--neg); }
+  .vbar-value{ font-size:11.5px; font-weight:700; color:var(--dark); margin-top:6px; }
+  .vbar-label{ font-size:11px; color:var(--sub); margin-top:2px; }
+
+  /* 부서별 인원현황 - 타일 그리드 */
+  .dept-group-head{ display:flex; justify-content:space-between; align-items:center; font-size:11.5px; font-weight:800; color:var(--dark); margin:10px 0 6px; padding-bottom:4px; border-bottom:1px solid var(--border); }
+  .dept-group-head:first-child{ margin-top:0; }
+  .dept-group-head b{ color:var(--mute); font-weight:700; font-size:11px; }
+  .dept-tile-grid{ display:grid; grid-template-columns:repeat(auto-fill, minmax(112px,1fr)); gap:8px; margin-bottom:8px; }
+  .dept-tile{ background:#F7F9FC; border-left:3px solid var(--c1); border-radius:6px; padding:10px 12px; cursor:pointer; }
+  .dept-tile-count{ font-size:18px; font-weight:800; color:var(--dark); }
+  .dept-tile-count span{ font-size:11px; font-weight:600; color:var(--mute); margin-left:2px; }
+  .dept-tile-name{ 
+    font-size:11px; color:var(--sub); margin-top:3px; 
+    display:-webkit-box;
+    -webkit-line-clamp:2;
+    -webkit-box-orient:vertical;
+    overflow:hidden; 
+    white-space:normal;
+    line-height:1.35;
+  }
+
+  /* Offside-region-head */
+  .offsite-region-head{ display:flex; justify-content:space-between; align-items:center; font-size:12.5px; font-weight:800; color:var(--dark); margin:14px 0 6px; padding:4px 8px; border-radius:6px; background:#F7F5FD; }
+    .offsite-region-head:first-child{ margin-top:0; }
+    .offsite-pos-row{ font-size:11.5px; padding:3px 0 3px 10px; line-height:1.6; }
+    .offsite-pos-row b{ color:var(--mute); font-weight:700; margin-right:6px; }
+  
+  /* 파이 차트 - 중앙 정렬형 */
+  .pie-title{ font-size:11px; color:var(--mute); text-align:center; margin-bottom:2px; }
+  .pie-legend{ display:flex; justify-content:center; flex-wrap:wrap; gap:14px; margin-top:4px; }
+  .pie-legend-item{ display:flex; align-items:center; font-size:11.5px; color:#475467; gap:5px; }
+  .pie-legend-item i{ width:10px; height:10px; border-radius:2px; flex-shrink:0; }
+
+  table.tbl{ width:100%; border-collapse:collapse; font-size:12px; }
+  table.tbl th{ text-align:left; color:var(--mute); font-weight:700; font-size:10.5px; padding:6px 8px; border-bottom:1px solid var(--border); }
+  table.tbl th.num, table.tbl td.num{ text-align:right; }
+  table.tbl td{ padding:8px 8px; border-bottom:1px solid #F0F2F5; color:#344054; vertical-align:top; }
+  table.tbl tr:last-child td{ border-bottom:none; }
+  table.tbl tr.total td{ font-weight:800; color:var(--dark); background:#F7F9FC; }
+  tr.chg-group-head td{ padding-top:14px; padding-bottom:6px; border-bottom:none; }
+  tr.chg-group-head:first-child td{ padding-top:6px; }
+  .chg-group-count{ margin-left:7px; font-size:10.5px; color:var(--mute); font-weight:700; }
+  .tag{ font-size:10px; font-weight:700; padding:2px 7px; border-radius:9px; white-space:nowrap; }
+  .tag.move{ background:#EAF1FF; color:#2F6FED; }
+  .tag.promo{ background:#E6F7F2; color:#16876F; }
+  .tag.leave{ background:#FDF3E7; color:#B7791F; }
+  .tag.retire{ background:#FDEDE8; color:#C6431E; }
+  .tag.hire{ background:#F3EFFD; color:#7C5FD1; }
+  .tag.dispatch{ background:#F3EFFD; color:#7C5FD1; }
+  .tag.transfer-in{ background:#EAFBF3; color:#0E9F6E; }
+  .tag.transfer-out{ background:#FFF1E6; color:#C2570B; }
+  .chg-line{ display:flex; align-items:center; gap:6px; margin-bottom:4px; font-size:11.5px; color:#344054; }
+  .chg-line:last-child{ margin-bottom:0; }
+  .chg-arrow{ color:#475467; }
+  .chg-position{ font-size:10.5px; color:var(--mute); font-weight:600; }
+
+  .miniflow{ display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; padding:12px 14px; background:#F7F9FC; border-radius:8px; }
+  .miniflow .num{ font-size:22px; font-weight:800; color:var(--dark); }
+  .miniflow .lab{ font-size:11px; color:var(--sub); margin-top:2px; }
+  .miniflow .arrow{ font-size:18px; color:var(--mute); margin:0 10px; }
+  .miniflow .diff{ font-size:12px; font-weight:700; padding:3px 9px; border-radius:10px; }
+
+  .flow-note{ font-size:10.5px; color:var(--mute); margin-top:10px; line-height:1.6; }
+  .flow-tooltip{ position:absolute; background:#fff; border:1px solid #E5E5E5; border-radius:6px; padding:8px 10px; font-size:12px; line-height:1.6; box-shadow:0 4px 12px rgba(0,0,0,.12); z-index:50; min-width:80px; }
+  .footer{ margin-top:20px; font-size:10.5px; color:var(--mute); text-align:center; }
+
+  /* ===== 페이지 탭 (2p 이후 확장용) ===== */
+  .page-tabs{ display:flex; gap:8px; margin-bottom:16px; }
+  .page-tab{
+    font-family:inherit; font-size:12.5px; font-weight:700; padding:8px 16px;
+    border-radius:8px; border:1px solid var(--border); background:var(--card);
+    color:var(--sub); cursor:pointer;
+  }
+  .page-tab.active{ background:var(--dark); color:#fff; border-color:var(--dark); }
+  .page{ display:none; }
+  .page.active{ display:block; }
+
+  /* ===== 요약 배지 (2p 휴직/계약 등 리스트형 카드 상단) ===== */
+  .badge-row{ display:flex; flex-wrap:wrap; gap:8px; margin-bottom:12px; }
+  .badge{ font-size:11.5px; font-weight:700; padding:4px 11px; border-radius:11px; white-space:nowrap; }
+
+  @media (max-width:900px){ .w-half{ width:100%; } }
+</style>
+</head>
+<body>
+
+  <div class="header">
+    <div class="titlewrap">
+      <span class="tab"></span>
+      <div>
+        <h1>해양사업부 인력현황 대시보드</h1>
+      </div>
+    </div>
+    <div class="meta">
+      기준일 <input type="date" id="reportDate">
+    </div>
+  </div>
+
+  <div class="data-bar">
+    <div class="grp">
+      <span class="req must">필수</span>
+      <label class="upbtn" for="currCsv">당월 명부 CSV 업로드</label>
+      <input type="file" id="currCsv" accept=".csv" onchange="onRosterFile('curr', this.files[0])">
+      <span class="fname" id="currFname">미선택</span>
+      <span class="status wait" id="currStatus">대기중</span>
+    </div>
+    <div class="divider"></div>
+    <div class="grp">
+      <span class="req opt">선택</span>
+      <label class="upbtn" for="prevCsv" style="background:var(--pos)">전월 명부 CSV 업로드</label>
+      <input type="file" id="prevCsv" accept=".csv" onchange="onRosterFile('prev', this.files[0])">
+      <span class="fname" id="prevFname">미선택</span>
+      <span class="status wait" id="prevStatus">대기중</span>
+    </div>
+    <div class="divider"></div>
+    <div class="grp">
+      <button type="button" class="savebtn" onclick="exportSnapshot()">현재 화면 HTML로 저장</button>
+    </div>
+    <div class="divider"></div>
+    <span style="font-size:11px; color:var(--mute);">전사명부를 업로드해 주십시오. 당월 파일만 올리면 인력증감·발령 변동사항을 제외한 모든 카드가 계산됩니다.</span>
+  </div>
+
+  <div class="upload-err" id="uploadErrorBanner" style="display:none;"></div>
+
+  <div class="theme-panel">
+    <span class="label">색상 테마</span>
+    <div class="swatch" style="background:#2F6FED" onclick="setTheme('#2F6FED','#6FA8FF','#BFD6FF','#DCE4F0','#16233F')" title="네이비 블루"></div>
+    <div class="swatch" style="background:#1F9E89" onclick="setTheme('#1F9E89','#5BC2AE','#A7E0D4','#DFF3EE','#123B33')" title="포레스트 틸"></div>
+    <div class="swatch" style="background:#7C5FD1" onclick="setTheme('#7C5FD1','#A98BE0','#C9B5EE','#EDE6FA','#2E2350')" title="그레이프 바이올렛"></div>
+    <div class="swatch" style="background:#E4572E" onclick="setTheme('#E4572E','#F08A5D','#F6B99B','#FBE3D3','#5B2A18')" title="선셋 웜"></div>
+    <div class="divider"></div>
+    <div class="colorpick">
+      <span>직접 지정</span>
+      <input type="color" id="customColor" value="#2F6FED" oninput="setCustom(this.value)">
+    </div>
+  </div>
+
+  <div class="page-tabs">
+    <button type="button" class="page-tab active" id="tabBtn1" onclick="showPage(1)">1p 개요</button>
+    <button type="button" class="page-tab" id="tabBtn2" onclick="showPage(2)">2p 휴직 인원</button>
+    <button type="button" class="page-tab" id="tabBtn3" onclick="showPage(3)">3p 정년·임금피크</button>
+    <button type="button" class="page-tab" id="tabBtn4" onclick="showPage(4)">4p 사외파견인원현황</button>
+  </div>
+
+  <div class="page active" id="page1">
+
+  <div class="kpi-row">
+    <div class="kpi alt">
+      <div class="label">전체 재직 인원</div>
+      <div class="value" id="kpiTotal">-</div>
+      <span class="chip neutral" id="kpiTotalChip">당월 CSV 업로드 대기중</span>
+    </div>
+    <div class="kpi alt">
+      <div class="label">발령 · 변동 건수</div>
+      <div class="value" id="kpiChanges">-</div>
+      <span class="chip neutral" id="kpiChangesChip">전월/당월 CSV 필요</span>
+    </div>
+    <div class="kpi alt">
+      <div class="label">파견 등록 인원</div>
+      <div class="value" id="kpiDispatch">-</div>
+      <span class="chip neutral" id="kpiDispatchChip">당월 CSV 업로드 대기중</span>
+    </div>
+    <div class="kpi alt">
+      <div class="label">평균 근속연수</div>
+      <div class="value" id="kpiTenure">-</div>
+      <span class="chip neutral" id="kpiTenureChip">그룹입사일 기준 · 임원 제외</span>
+    </div>
+  </div>
+
+  <div class="grid">
+
+    <!-- 인력증감내역 -->
+    <div class="card w-half">
+      <div class="card-title"><span class="tab"></span><h2>인력증감내역</h2><span class="note">전월/당월 명부 비교</span></div>
+      <div id="flowContent" class="card-body">
+        <div class="empty-state">전월·당월 명부 CSV를 모두 올리면 표시됩니다</div>
+      </div>
+    </div>
+
+    <!-- 발령 변동사항 -->
+    <div class="card w-half">
+      <div class="card-title"><span class="tab" style="background:var(--pos)"></span><h2>발령 변동사항</h2><span class="note" id="changeNote">전월/당월 명부 비교</span></div>
+      <div id="changeContent" class="card-body">
+        <div class="empty-state">전월·당월 명부 CSV를 모두 올리면 표시됩니다</div>
+      </div>
+    </div>
+
+    <!-- 부서별 인원현황 -->
+    <div class="card w-half">
+      <div class="card-title"><span class="tab"></span><h2>부서별 인원현황</h2><span class="note" id="deptNote">원소속부서 기준</span></div>
+      <div id="deptContent" class="card-body"><div class="empty-state">당월 명부 CSV를 올리면 표시됩니다</div></div>
+    </div>
+
+    <!-- 직군별 인원 현황 -->
+    <div class="card w-half">
+      <div class="card-title"><span class="tab" style="background:#7C5FD1"></span><h2>직군별 인원 현황</h2><span class="note" id="jobNote">직급코드 기준</span></div>
+      <div id="jobContent" class="card-body"><div class="empty-state">당월 명부 CSV를 올리면 표시됩니다</div></div>
+    </div>
+
+    <!-- 조직별 학력사항 -->
+    <div class="card w-half">
+      <div class="card-title"><span class="tab" style="background:var(--pos)"></span><h2>조직별 학력사항</h2><span class="note">조직 × 최종학력</span></div>
+      <div id="eduContent" class="card-body"><div class="empty-state">당월 명부 CSV를 올리면 표시됩니다</div></div>
+    </div>
+
+    <!-- 사외파견 인원 현황 -->
+    <div class="card w-half">
+      <div class="card-title"><span class="tab" style="background:#7C5FD1"></span><h2>사내·외 파견 인원 현황</h2><span class="note" id="dispatchNote">파견지역 기준</span></div>
+      <div id="dispatchContent" class="card-body"><div class="empty-state">당월 명부 CSV를 올리면 표시됩니다</div></div>
+    </div>
+
+    <!-- 팀별 평균 근속 연수 -->
+    <div class="card w-half">
+      <div class="card-title"><span class="tab"></span><h2>팀별 평균 근속 연수</h2><span class="note">그룹입사일 기준 · 임원 제외</span></div>
+      <div id="teamTenureContent" class="card-body"><div class="empty-state">당월 명부 CSV를 올리면 표시됩니다</div></div>
+    </div>
+
+    <!-- 근속연수별 인원 현황 -->
+    <div class="card w-half">
+      <div class="card-title"><span class="tab"></span><h2>근속연수별 인원 현황</h2><span class="note" id="tenureBucketNote">그룹입사일 기준 구간</span></div>
+      <div id="tenureBucketContent" class="card-body"><div class="empty-state">당월 명부 CSV를 올리면 표시됩니다</div></div>
+    </div>
+
+    <!-- 직급별 인원 현황 (L7~L3) -->
+    <div class="card w-half">
+      <div class="card-title"><span class="tab" style="background:#7C5FD1"></span><h2>직급별 인원 현황</h2><span class="note" id="levelNote">직급코드(L7~L3, 계약직 포함) 기준</span></div>
+      <div id="levelContent" class="card-body"><div class="empty-state">당월 명부 CSV를 올리면 표시됩니다</div></div>
+    </div>
+
+  </div>
+
+  </div><!-- /page1 -->
+
+  <div class="page" id="page2">
+  <div class="grid">
+
+    <!-- 휴직중 인원 명단 -->
+    <div class="card" style="width:100%;">
+      <div class="card-title"><span class="tab" style="background:var(--pos)"></span><h2>휴직중 인원 명단</h2><span class="note" id="leaveNote">원소속부서 기준</span></div>
+      <div id="leaveContent" class="card-body"><div class="empty-state">당월 명부 CSV를 올리면 표시됩니다</div></div>
+    </div>
+
+  </div>
+  </div><!-- /page2 -->
+
+  <div class="page" id="page3">
+  <div class="grid">
+
+    <!-- 정년·임금피크 예측 -->
+    <div class="card" style="width:100%;">
+      <div class="card-title"><span class="tab" style="background:#7C5FD1"></span><h2>정년·임금피크 예측</h2><span class="note" id="retireForecastNote">법정생년월일 기준</span></div>
+      <div id="retireForecastContent" class="card-body"><div class="empty-state">당월 명부 CSV를 올리면 표시됩니다</div></div>
+    </div>
+
+    <div class="card" style="width:100%;">
+      <div class="card-title"><span class="tab" style="background:#16876F"></span><h2>계약직 현황</h2><span class="note" id="contractNote">직급코드 기준 정렬</span></div>
+      <div id="contractContent" class="card-body"><div class="empty-state">당월 명부 CSV를 올리면 표시됩니다</div></div>
+    </div>
+
+    <div class="card" style="width:100%;">
+      <div class="card-title"><span class="tab" style="background:#C6431E"></span><h2>퇴직자 누적관리</h2><span class="note" id="retireeNote">연단위 관리</span></div>
+      <div id="retireeContent" class="card-body">
+        <div style="overflow-x:auto;">
+          <table class="tbl" id="retireeTable">
+            <thead>
+              <tr>
+                <th>No.</th><th>퇴직연월</th><th>성명</th><th>소속부서</th><th>직위</th>
+                <th>입사일</th><th>퇴직일자</th><th>최종학력</th><th>최종학교</th><th>최종전공</th>
+                <th>퇴사사유</th><th>이직처</th><th>퇴직구분</th><th></th>
+              </tr>
+            </thead>
+            <tbody id="retireeTbody"></tbody>
+          </table>
+        </div>
+        <button type="button" onclick="addRetireeRow()" style="margin-top:8px;">+ 행 추가</button>
+      </div>
+    </div>
+
+  </div>
+  </div><!-- /page3 -->
+
+  <div class="page" id="page4">
+    <div class="grid">
+
+      <div class="card" style="width:100%;">
+        <div class="card-title"><span class="tab" style="background:#7C5FD1"></span><h2>사외파견 인원 현황</h2><span class="note" id="offsiteNote">파견지역 기준 분류</span></div>
+        <div id="offsiteContent" class="card-body"><div class="empty-state">당월 명부 CSV를 올리면 표시됩니다</div></div>
+      </div>
+      
+    </div>
+    </div><!-- /page4 -->
+  
+  <div class="footer" id="footerNote">CSV를 업로드하면 이 대시보드의 모든 수치가 자동 계산됩니다 · 색상 테마는 상단 패널에서 변경 가능</div>
+
+<script>
+/* ===================================================================
+   0. 설정값 — 조직 구조 / 직군 분류 기준
+   회사 조직 개편 시 아래 목록만 수정하면 됩니다. (실제 인원 데이터는
+   전부 CSV에서 읽어오고, 이 부분은 "어느 팀이 어느 상위 조직 소속인지",
+   "어느 팀이 해양사업부 소속인지"를 판별하기 위한 분류 기준표입니다)
+   =================================================================== */
+const ORG_GROUPS = {
+  '직속조직': ['해양사업부','해양사업전략팀','해양사업단','소나개발팀'],
+  'SV사업센터': ['Smart Vessel사업센터','Smart Vessel사업팀','Smart Battleship체계팀','SBS체계팀','무인체계팀']
+};
+function groupOf(org){
+  for(const [g, list] of Object.entries(ORG_GROUPS)){
+    if(list.includes(org)) return g;
+  }
+  return '해양연구소';
+}
+
+// 해양사업부 소속 팀 전체 목록 (전사명부를 올렸을 때 이 팀들만 걸러서 집계함)
+const MARINE_TEAMS = [
+  // 직속조직
+  '해양사업부','해양사업전략팀','해양사업단','소나개발팀',
+  // 해양연구소
+  '해양연구소','해양시스템1팀','해양시스템2팀','해양시스템3팀','해양시스템4팀','해양시스템5팀','해양SW1팀','해양SW2팀',
+  // SV사업센터
+  'Smart Vessel사업센터','Smart Vessel사업팀','Smart Battleship체계팀','SBS체계팀','무인체계팀'
+];
+function isMarine(org){ return MARINE_TEAMS.includes(org); }
+
+const EXEC_TITLES = ['임원','상무','전무','부사장'];
+function isExec(row){ return EXEC_TITLES.includes(row['직위코드명']); }
+function jobFamily(code, org){
+  const p = (code || '')[0];
+  if(p === 'R') return 'R직군(연구개발)';
+  if(p === 'S') return 'S직군(영업)';
+  if(p === 'A') return 'A직군(경영지원)';
+  if(p === 'G'){
+    // 계약직은 직급코드만으로 구분이 안 되어 소속부서로 판단
+    if(/해양사업단|Smart Vessel사업팀/.test(org||'')) return 'S직군(영업)';
+    if(/해양연구소|해양시스템1팀|해양시스템2팀|해양시스템3팀|해양시스템4팀|해양시스템5팀|해양SW1팀|해양SW2팀|Smart Battleship체계팀|무인체계팀/.test(org||'')) return 'R직군(연구개발)';
+    if(/해양사업전략팀/.test(org||'')) return 'A직군(경영지원)';
+    return '계약직(기타)';
+  }
+  return '기타';
+}
+
+// 부서별 인원현황 카드 - 그룹 표시 순서
+const GROUP_ORDER = ['직속조직', '해양연구소', 'SV사업센터'];
+
+// 부서별 인원현황 카드 - 그룹 내부 부서 표시 순서 (지정 안 된 부서는 뒤쪽에 가나다순으로 붙음)
+const DEPT_ORDER = {
+  '직속조직': ['해양사업부','해양사업전략팀','해양사업단','소나개발팀'],
+  '해양연구소': ['해양연구소','해양시스템1팀','해양시스템2팀','해양시스템3팀','해양시스템4팀','해양시스템5팀','해양SW1팀','해양SW2팀'],
+  'SV사업센터': ['Smart Vessel사업센터','Smart Vessel사업팀','무인체계팀','Smart Battleship체계팀']
+};
+
+/* ===================================================================
+   1. 색상 테마
+   =================================================================== */
+function hexToRgb(hex){
+  hex = hex.replace('#','');
+  return [parseInt(hex.substring(0,2),16), parseInt(hex.substring(2,4),16), parseInt(hex.substring(4,6),16)];
+}
+function rgbToHex(r,g,b){
+  return '#' + [r,g,b].map(v => Math.max(0,Math.min(255,Math.round(v))).toString(16).padStart(2,'0')).join('');
+}
+function mix(hex, target, amount){
+  const [r,g,b] = hexToRgb(hex);
+  const [tr,tg,tb] = hexToRgb(target);
+  return rgbToHex(r+(tr-r)*amount, g+(tg-g)*amount, b+(tb-b)*amount);
+}
+function setTheme(c1,c2,c3,c4,dark){
+  const root = document.documentElement.style;
+  root.setProperty('--c1', c1);
+  root.setProperty('--c2', c2);
+  root.setProperty('--c3', c3);
+  root.setProperty('--c4', c4);
+  root.setProperty('--dark', dark);
+  document.getElementById('customColor').value = c1;
+  if(state.curr) renderAllFromCurrent(); // 도넛 색상 재반영
+}
+function setCustom(hex){
+  setTheme(hex, mix(hex,'#FFFFFF',0.35), mix(hex,'#FFFFFF',0.62), mix(hex,'#FFFFFF',0.85), mix(hex,'#000000',0.55));
+}
+function themeColors(){
+  const s = getComputedStyle(document.documentElement);
+  return [s.getPropertyValue('--c1').trim(), s.getPropertyValue('--c2').trim(), s.getPropertyValue('--c3').trim(), s.getPropertyValue('--c4').trim()];
+}
+
+/* ===================================================================
+   2. CSV 파싱 & 상태
+   =================================================================== */
+const state = { curr: null, prev: null, contractDates: {}, retirees: [] };
+
+function parseCsvText(text){
+  const lines = text.split(/\r?\n/).filter(l => l.length > 0);
+  const rows = lines.map(line => {
+    const cells = [];
+    let cur = '', inQuotes = false;
+    for(let i = 0; i < line.length; i++){
+      const ch = line[i];
+      if(ch === '"'){ inQuotes = !inQuotes; }
+      else if(ch === ',' && !inQuotes){ cells.push(cur); cur = ''; }
+      else{ cur += ch; }
+    }
+    cells.push(cur);
+    return cells.map(c => c.trim());
+  });
+  const header = rows[0];
+  return rows.slice(1).map(r => {
+    const obj = {};
+    header.forEach((h, i) => obj[h] = r[i] ?? '');
+    return obj;
+  });
+}
+
+const REQUIRED_COLUMNS = ['사번','성명','재직상태','원소속부서'];
+
+function resetFileStatus(which){
+  const statusEl = document.getElementById(which === 'prev' ? 'prevStatus' : 'currStatus');
+  statusEl.textContent = '대기중';
+  statusEl.classList.remove('ok'); statusEl.classList.add('wait');
+  state[which] = null;
+}
+
+function showUploadError(which, msg){
+  const banner = document.getElementById('uploadErrorBanner');
+  const label = which === 'prev' ? '[전월 명부] ' : '[당월 명부] ';
+  banner.textContent = label + msg;
+  banner.style.display = 'block';
+}
+
+function clearUploadError(which){
+  // 다른 파일에 대한 오류 메시지가 떠 있는 상태라면, 그 메시지는 지우지 않습니다.
+  const banner = document.getElementById('uploadErrorBanner');
+  const label = which === 'prev' ? '[전월 명부]' : '[당월 명부]';
+  if(banner.textContent.startsWith(label)){
+    banner.style.display = 'none';
+    banner.textContent = '';
+  }
+}
+
+function onRosterFile(which, file){
+  if(!file) return;
+  document.getElementById(which === 'prev' ? 'prevFname' : 'currFname').textContent = file.name;
+
+  // 1) 확장자 검사 — .csv가 아닌 파일(xlsx 등)을 그대로 올린 경우
+  if(!/\.csv$/i.test(file.name)){
+    showUploadError(which, 'CSV 파일(.csv)만 업로드할 수 있습니다. 엑셀 파일이라면 "다른 이름으로 저장 → CSV UTF-8"로 변환한 뒤 다시 올려주세요.');
+    resetFileStatus(which);
+    return;
+  }
+
+  const reader = new FileReader();
+
+  // 2) 파일을 읽는 것 자체가 실패한 경우 (손상된 파일, 다른 프로그램에서 점유 중 등)
+  reader.onerror = () => {
+    showUploadError(which, '파일을 읽는 중 오류가 발생했습니다. 파일이 손상되었거나 다른 프로그램에서 열려 있는지 확인해주세요.');
+    resetFileStatus(which);
+  };
+
+  reader.onload = e => {
+    try {
+      const text = e.target.result;
+
+      // 3) 인코딩(복호화) 문제 감지 — UTF-8이 아닌 인코딩(EUC-KR 등)으로 저장된 파일을
+      //    UTF-8로 읽으면 한글이 깨지면서 대체 문자(�)가 다수 나타납니다.
+      const brokenCharCount = (text.match(/\uFFFD/g) || []).length;
+      if(brokenCharCount > 3){
+        showUploadError(which, '파일 인코딩을 읽지 못했습니다(복호화 실패). 엑셀에서 "CSV UTF-8" 형식으로 다시 저장한 뒤 업로드해주세요.');
+        resetFileStatus(which);
+        return;
+      }
+
+      const rows = parseCsvText(text);
+
+      // 4) 빈 파일이거나 헤더만 있고 실제 데이터 행이 없는 경우
+      if(rows.length === 0){
+        showUploadError(which, '업로드한 CSV에 데이터가 없습니다. 헤더 행만 있거나 빈 파일인지 확인해주세요.');
+        resetFileStatus(which);
+        return;
+      }
+
+      // 5) 필수 컬럼 존재 여부 확인
+      const header = Object.keys(rows[0]);
+      const missing = REQUIRED_COLUMNS.filter(c => !header.includes(c));
+      if(missing.length){
+        showUploadError(which, `필수 컬럼이 없습니다: ${missing.join(', ')}. 명부를 내려받을 때 컬럼명이 그대로 유지되었는지 확인해주세요.`);
+        resetFileStatus(which);
+        return;
+      }
+
+      clearUploadError(which);
+      state[which] = rows;
+      const statusEl = document.getElementById(which === 'prev' ? 'prevStatus' : 'currStatus');
+      statusEl.textContent = rows.length + '명 로드됨';
+      statusEl.classList.remove('wait'); statusEl.classList.add('ok');
+
+      if(which === 'curr') renderAllFromCurrent();
+      if(state.prev && state.curr) renderComparison();
+
+    } catch(err){
+      // 6) 그 밖에 예상하지 못한 파싱 오류
+      showUploadError(which, '파일을 처리하는 중 예기치 않은 오류가 발생했습니다: ' + err.message);
+      resetFileStatus(which);
+    }
+  };
+
+  reader.readAsText(file, 'UTF-8');
+}
+
+function baseDate(){
+  const v = document.getElementById('reportDate').value;
+  return v ? new Date(v) : new Date();
+}
+
+/* ===================================================================
+   3. 공용 렌더 헬퍼 (막대 리스트 / 도넛 / 테이블)
+   =================================================================== */
+function renderBarList(containerId, data, opts = {}){
+  const max = opts.max || Math.max(1, ...data.map(d => Math.abs(d.value)));
+  // 기준선(예: 사업부 평균) 위치를 각 막대 트랙에 동일한 비율로 표시합니다.
+  // 모든 트랙의 폭이 같기 때문에, 위에서 아래까지 하나의 세로 기준선처럼 보입니다.
+  const hasMark = opts.markValue != null;
+  const markPct = hasMark ? Math.min(100, Math.max(0, (opts.markValue / max) * 100)) : 0;
+  const markTick = hasMark ? `<div class="track-mark" style="left:${markPct}%"></div>` : '';
+  const rows = data.map(d => {
+    const pct = Math.max(2, Math.round(Math.abs(d.value) / max * 100));
+    const color = d.color || 'var(--c1)';
+    return `<div class="barrow"><div class="name">${d.label}</div><div class="track">${markTick}<div class="fill" style="width:${pct}%; background:${color}"></div></div><div class="num">${d.value}${opts.unit || ''}</div></div>`;
+  }).join('');
+  const markLegend = hasMark ? `<div class="track-mark-legend"><span class="track-mark-swatch"></span>${opts.markLabel || ''}</div>` : '';
+  document.getElementById(containerId).innerHTML = markLegend + rows + (opts.footer || '');
+}
+
+function renderDonut(containerId, data, centerLabel){
+  const total = data.reduce((a, d) => a + d.value, 0);
+  const cx = 150, cy = 150, r = 88;
+  const toRad = deg => deg * Math.PI / 180;
+  const point = (angleDeg, radius) => [cx + radius*Math.cos(toRad(angleDeg)), cy + radius*Math.sin(toRad(angleDeg))];
+
+  let startAngle = -90;
+  let paths = '';
+  let labels = '';
+
+  data.forEach(d => {
+    const sweep = total ? (d.value/total)*360 : 0;
+    const endAngle = startAngle + sweep;
+    const midAngle = startAngle + sweep/2;
+    const [x1,y1] = point(startAngle, r);
+    const [x2,y2] = point(endAngle, r);
+    const largeArc = sweep > 180 ? 1 : 0;
+    paths += `<path d="M${cx},${cy} L${x1},${y1} A${r},${r} 0 ${largeArc} 1 ${x2},${y2} Z" fill="${d.color}" stroke="#fff" stroke-width="1.5"/>`;
+
+    // 조각이 일정 비율(8%) 이상일 때만 차트 위에 안내선 라벨을 표시합니다.
+    // 작은 조각까지 전부 표시하면 라벨끼리 겹쳐 보이므로, 작은 조각은 범례에서만 값을 확인합니다.
+    const pct = total ? Math.round(d.value/total*100) : 0;
+    if(d.value > 0 && pct >= 8){
+      const isRight = Math.cos(toRad(midAngle)) >= 0;
+      const [lx1,ly1] = point(midAngle, r);
+      const [lx2,ly2] = point(midAngle, r+16);
+      const tx = lx2 + (isRight ? 5 : -5);
+      const anchor = isRight ? 'start' : 'end';
+      labels += `
+        <line x1="${lx1}" y1="${ly1}" x2="${lx2}" y2="${ly2}" stroke="#98A2B3" stroke-width="1"/>
+        <text x="${tx}" y="${ly2}" text-anchor="${anchor}" font-size="11" fill="#344054">
+          <tspan x="${tx}" dy="-2">${d.label}</tspan>
+          <tspan x="${tx}" dy="14" font-weight="700">${d.value}명, ${pct}%</tspan>
+        </text>`;
+    }
+    startAngle = endAngle;
+  });
+
+  // 범례에는 조각 크기와 무관하게 항상 인원수·비율을 함께 표기합니다.
+  const legend = data.map(d => {
+    const pct = total ? Math.round(d.value/total*100) : 0;
+    return `<span class="pie-legend-item"><i style="background:${d.color}"></i>${d.label} ${d.value}명(${pct}%)</span>`;
+  }).join('');
+
+  document.getElementById(containerId).innerHTML = `
+    <div class="pie-title">${centerLabel}</div>
+    <svg width="100%" height="300" viewBox="0 0 300 300" style="overflow:visible;">${paths}${labels}</svg>
+    <div class="pie-legend">${legend}</div>
+  `;
+}
+
+function donutPalette(n){
+  const [c1,c2,c3,c4] = themeColors();
+  const base = [c1,c2,c3,c4];
+  const colors = [];
+  for(let i=0;i<n;i++){
+    colors.push(i < 4 ? base[i] : mix(c1, '#FFFFFF', 0.2 + 0.15*(i-4)));
+  }
+  return colors;
+}
+
+/* ===================================================================
+   4. 당월 명부만으로 계산되는 카드들
+   전사명부를 올려도 isMarine()으로 해양사업부 소속만 걸러서 사용합니다.
+   =================================================================== */
+function renderAllFromCurrent(){
+  const marineAll = state.curr.filter(r => isMarine(r['원소속부서']));
+  const active = marineAll.filter(r => r['재직상태'] === '재직');
+
+  // KPI: 총원
+  document.getElementById('kpiTotal').textContent = active.length + '명';
+  document.getElementById('kpiTotalChip').textContent = '재직 인원 기준';
+  document.getElementById('kpiTotalChip').className = 'chip up';
+
+  renderDeptCard(active);
+  renderJobCard(active);
+  renderEduCard(active);
+  renderDispatchCard(active);
+  renderOffsiteDispatchCard(active);
+  renderTenureCards(active);
+  renderLevelCard(active);
+  renderRetireForecastCard(active);
+  renderContractCard(active);
+
+  // 휴직 인원은 재직상태가 '휴직'인 행이라 위의 active(재직) 목록에는 잡히지 않으므로 별도로 추출
+  const onLeave = marineAll.filter(r => r['재직상태'] === '휴직');
+  renderLeaveCard(onLeave);
+}
+
+/* ===================================================================
+   4-1. 페이지 탭 전환 (1p 개요 / 2p 휴직 인원 ...)
+   =================================================================== */
+function showPage(n){
+  document.getElementById('page1').classList.toggle('active', n === 1);
+  document.getElementById('page2').classList.toggle('active', n === 2);
+  document.getElementById('page3').classList.toggle('active', n === 3);
+  document.getElementById('page4').classList.toggle('active', n === 4);
+  document.getElementById('tabBtn1').classList.toggle('active', n === 1);
+  document.getElementById('tabBtn2').classList.toggle('active', n === 2);
+  document.getElementById('tabBtn3').classList.toggle('active', n === 3);
+  document.getElementByID('tabBtn4').classList.toggle('active', n === 4);
+}
+
+/* ===================================================================
+   4-2. 날짜 파싱 / 표기 공용 헬퍼
+   전사명부의 날짜 컬럼은 "20260301" 형태(YYYYMMDD)로 내려오는 경우가
+   많아 이를 기본으로 하되, "2026-03-01" 같은 구분자 포함 형태도 함께 지원합니다.
+   =================================================================== */
+function parseYMD(v){
+  if(!v) return null;
+  const s = String(v).trim();
+  if(!s) return null;
+  let y, m, d;
+  if(/^\d{8}$/.test(s)){
+    y = +s.slice(0,4); m = +s.slice(4,6); d = +s.slice(6,8);
+  } else {
+    const m2 = s.match(/^(\d{4})[-.\/](\d{1,2})[-.\/](\d{1,2})/);
+    if(!m2) return null;
+    y = +m2[1]; m = +m2[2]; d = +m2[3];
+  }
+  const dt = new Date(y, m-1, d);
+  return isNaN(dt.getTime()) ? null : dt;
+}
+function fmtYMD(dt){
+  if(!dt) return '-';
+  const y = String(dt.getFullYear()).slice(2);
+  const m = String(dt.getMonth()+1).padStart(2,'0');
+  const d = String(dt.getDate()).padStart(2,'0');
+  return `'${y}.${m}.${d}`;
+}
+
+/* ===================================================================
+   4-3. 휴직중 인원 명단 (2p)
+   재직상태='휴직'인 행을 원소속부서 기준으로 그대로 사용합니다.
+   복직예정일 임박순으로 정렬하고, 기준일로부터 3개월 이내 복직 예정
+   행은 강조 표시합니다.
+   =================================================================== */
+function renderLeaveCard(leaveRows){
+  const base = baseDate();
+
+  const rows = leaveRows.map(r => ({
+    name: r['성명'],
+    org: r['원소속부서'],
+    title: r['직위코드명'] || '-',
+    type: r['휴직구분명'] || '기타',
+    leaveDate: parseYMD(r['휴직일']),
+    returnDate: parseYMD(r['복직예정일'])
+  })).sort((a,b) => {
+    if(!a.returnDate && !b.returnDate) return 0;
+    if(!a.returnDate) return 1;
+    if(!b.returnDate) return -1;
+    return a.returnDate - b.returnDate;
+  });
+
+  if(rows.length === 0){
+    document.getElementById('leaveContent').innerHTML = '<div class="empty-state">휴직중인 인원이 없습니다</div>';
+    document.getElementById('leaveNote').textContent = '총 0명';
+    return;
+  }
+
+  const in3m = new Date(base);
+  in3m.setMonth(in3m.getMonth() + 3);
+  const isSoon = r => r.returnDate && r.returnDate >= base && r.returnDate <= in3m;
+
+  // 휴직구분별 집계 배지
+  const typeCounts = {};
+  rows.forEach(r => { typeCounts[r.type] = (typeCounts[r.type]||0) + 1; });
+  const soonCount = rows.filter(isSoon).length;
+
+  const typeBadgeColor = { '육아휴직': ['#EAF1FF', '#2F6FED'], '직무외상병휴직': ['#FDF3E7', '#B7791F'] };
+  const badges = Object.entries(typeCounts).map(([t,c]) => {
+    const [bg,fg] = typeBadgeColor[t] || ['#F3EFFD', '#7C5FD1'];
+    return `<span class="badge" style="background:${bg};color:${fg};">${t} ${c}명</span>`;
+  }).join('') + (soonCount ? `<span class="badge" style="background:#E6F7F2;color:#16876F;">3개월 내 복직 ${soonCount}명</span>` : '');
+
+  const body = rows.map(r => `
+    <tr${isSoon(r) ? ' style="background:#E6F7F2;"' : ''}>
+      <td>${r.name}</td>
+      <td>${r.org}</td>
+      <td>${r.title}</td>
+      <td>${r.type}</td>
+      <td>${fmtYMD(r.leaveDate)}</td>
+      <td>${fmtYMD(r.returnDate)}</td>
+    </tr>`).join('');
+
+  document.getElementById('leaveContent').innerHTML = `
+    <div class="badge-row">${badges}</div>
+    <table class="tbl">
+      <tr><th>성명</th><th>원소속부서</th><th>직위</th><th>휴직구분</th><th>휴직일</th><th>복직예정일</th></tr>
+      ${body}
+    </table>`;
+  document.getElementById('leaveNote').textContent = `총 ${rows.length}명 · 복직예정일 임박순 정렬`;
+}
+
+/* ===================================================================
+   4-4. 직급별 인원 현황 (L7~L3)
+   최신 명부에는 그룹직급 컬럼이 없어, 직급코드의 첫 번째 숫자로 레벨을
+   추정합니다. (예: A31·R31·S31 → L3, A6·R6·S6 → L6, R521 → L5)
+   MD·VP·jED 같이 숫자가 없는 임원 코드는 자동으로 제외됩니다.
+   =================================================================== */
+const LEVEL_NUMS = ['7','6','5','4','3'];
+
+function levelKey(code){
+  const s = (code || '').trim();
+  const m = s.match(/[0-9]/); // 코드 내 첫 번째 숫자
+  if(!m) return null;
+  const n = m[0];
+  return (n >= '3' && n <= '7') ? n : null;
+}
+
+function renderLevelCard(active){
+  // 조직 필터 재계산에 쓸 수 있도록 원본 대상 인원을 저장해둡니다.
+  window.__levelAllRows = active;
+
+  document.getElementById('levelContent').innerHTML = `
+    <div id="levelFilterBox" style="margin-bottom:10px;">${buildLevelFilterTree()}</div>
+    <div id="levelChartBox"></div>
+  `;
+  computeAndRenderLevel(null);
+}
+
+// 직급별 인원현황 카드 전용 조직 필터 트리입니다. '해양사업부 전체'를 기본값으로 두고,
+// 부서별 인원현황 카드와 동일하게 그룹 → 조직 자체 → 하위팀 3단계로 구성합니다.
+function buildLevelFilterTree(){
+  let html = `<div class="level-filter-node" data-org="" onclick="onLevelFilterClick(this)"
+    style="font-weight:700;font-size:11.5px;padding:4px 6px;cursor:pointer;background:#EEF1F6;border-radius:4px;">해양사업부 전체</div>`;
+
+  GROUP_ORDER.forEach((g, gi) => {
+    const order = DEPT_ORDER[g] || [];
+    if(order.length === 0) return;
+    const selfOrg = order[0];
+    const children = order.slice(1);
+    const gid = 'lvl' + gi;
+
+    html += `<div style="display:flex;align-items:center;cursor:pointer;padding:5px 0 3px;" onclick="toggleCollapse('${gid}')">
+      <span id="arrow-${gid}" style="display:inline-block;margin-right:4px;transition:transform .15s;transform:rotate(90deg);font-size:10px;color:#475467;">▶</span>
+      <span style="font-size:11.5px;font-weight:700;color:var(--dark);">${g}</span>
+    </div>`;
+
+    html += `<div class="grp-${gid} level-filter-node" data-disp="block" data-org="${esc(selfOrg)}" onclick="onLevelFilterClick(this)"
+      style="display:block;font-size:11px;font-weight:700;color:#344054;padding:3px 6px 3px 18px;cursor:pointer;border-radius:4px;">
+      <span style="color:#98A2B3;margin-right:4px;">↳</span>${selfOrg}
+    </div>`;
+
+    html += children.map(t => `
+      <div class="grp-${gid} level-filter-node" data-disp="block" data-org="${esc(t)}" onclick="onLevelFilterClick(this)"
+        style="display:block;font-size:11px;color:#475467;padding:3px 6px 3px 36px;cursor:pointer;border-radius:4px;">
+        <span style="color:#98A2B3;margin-right:4px;">↳</span>${t}
+      </div>
+    `).join('');
+  });
+  return html;
+}
+
+function onLevelFilterClick(el){
+  document.querySelectorAll('.level-filter-node').forEach(n => n.style.background = '');
+  el.style.background = '#EEF1F6';
+  const org = el.dataset.org;
+  computeAndRenderLevel(org || null);
+}
+
+function computeAndRenderLevel(org){
+  const rows = window.__levelAllRows || [];
+  const filtered = org ? rows.filter(r => r['원소속부서'] === org) : rows;
+
+  const counts = {};
+  const peopleMap = {};
+  LEVEL_NUMS.forEach(n => { counts[n] = 0; peopleMap[n] = []; });
+  let excluded = 0;
+
+  filtered.forEach(r => {
+    const n = isExec(r) ? null : levelKey(r['직급코드']);
+    if(n){ counts[n]++; peopleMap[n].push({ name: r['성명'], position: r['직급명'] }); }
+    else excluded++;
+  });
+  window.__levelPeopleMap = peopleMap;
+
+  const total = LEVEL_NUMS.reduce((a,n) => a + counts[n], 0);
+  const colors = donutPalette(LEVEL_NUMS.length);
+  const data = LEVEL_NUMS.map((n,i) => ({ label: 'L' + n, value: counts[n], color: colors[i] }));
+  renderDonut('levelChartBox', data, (org || '해양사업부 전체') + ' 총원(명)');
+  attachLevelTooltip();
+
+  document.getElementById('levelNote').textContent =
+    (org ? org + ' 기준 · ' : '전체 · ') + `L7~L3 총 ${total}명(정규직+계약직)` + (excluded ? ` · 임원 등 ${excluded}명 제외` : '') + ' · 조각을 클릭하면 명단 표시';
+}
+
+// 도넛 조각을 클릭하면 해당 직급의 인원 명단을 툴팁으로 보여줍니다.
+function attachLevelTooltip(){
+  const svg = document.querySelector('#levelChartBox svg');
+  if(!svg) return;
+  const paths = svg.querySelectorAll('path');
+  paths.forEach((path, i) => {
+    const levelNum = LEVEL_NUMS[i];
+    path.style.cursor = 'pointer';
+    path.addEventListener('click', e => {
+      e.stopPropagation();
+      toggleLevelTooltip(e, levelNum);
+    });
+  });
+}
+
+function toggleLevelTooltip(e, levelNum){
+  let tip = document.getElementById('levelTooltip');
+  if(!tip){
+    tip = document.createElement('div');
+    tip.id = 'levelTooltip';
+    tip.className = 'flow-tooltip';
+    document.body.appendChild(tip);
+  }
+  if(tip.style.display === 'block' && tip.dataset.level === levelNum){
+    tip.style.display = 'none';
+    return;
+  }
+  const people = (window.__levelPeopleMap && window.__levelPeopleMap[levelNum]) || [];
+  tip.innerHTML = `<div style="font-weight:700;margin-bottom:4px;">L${levelNum} (${people.length}명)</div>` +
+    (people.length ? people.map(p => `<div>${p.name}${p.position ? ' (' + p.position + ')' : ''}</div>`).join('') : '<div style="color:#999;">해당 인원 없음</div>');
+  tip.dataset.level = levelNum;
+  tip.style.left = (e.pageX + 12) + 'px';
+  tip.style.top = (e.pageY + 12) + 'px';
+  tip.style.display = 'block';
+}
+document.addEventListener('click', function(e){
+  const tip = document.getElementById('levelTooltip');
+  if(!tip) return;
+  if(!tip.contains(e.target) && !e.target.closest('#levelChartBox svg')){
+    tip.style.display = 'none';
+  }
+});
+
+
+const HEAD_TITLES = ['사업부장', '사업단장', '사업센터장', '연구소장', '팀장'];
+function esc(s){ return String(s).replace(/'/g, "\\'"); }
+
+// 부서별 인원현황 카드 — 정부조직도 스타일(사각 박스 + 직각 커넥터)의 세로형 트리입니다.
+// 해양사업부(1명)은 곧 해양사업부장 본인이므로 별도 박스를 만들지 않고 루트에 통합했습니다.
+// 해양연구소·SV사업센터는 자체 인원까지 합산한 하나의 박스로 표시한 뒤 바로 하위팀으로 내려갑니다.
+// 부서별 인원현황 카드 — 정부조직도 스타일 가로형 SVG 트리입니다.
+// 해양사업부(1명)은 곧 해양사업부장 본인이므로 별도 박스 없이 루트에 통합했고,
+// 말단 팀 박스만 세로쓰기(글자 하나씩 tspan으로 쌓기)로 넣어 가로 폭을 아낍니다.
+function renderDeptCard(active){
+  window.__deptAllRows = active;
+
+  const orgCounts = {};
+  active.forEach(r => { const org = r['원소속부서']; orgCounts[org] = (orgCounts[org]||0)+1; });
+
+  const [c1,c2] = themeColors();
+  const groupColor = { '직속조직': c1, '해양연구소': mix(c1,'#000000',0.32), 'SV사업센터': c2 };
+
+  const directTeams = (DEPT_ORDER['직속조직']||[]).filter(t => t !== '해양사업부');
+  const instituteTeams = (DEPT_ORDER['해양연구소']||[]).slice(1);
+  const centerTeams = (DEPT_ORDER['SV사업센터']||[]).slice(1);
+  const groupTotal = g => active.filter(r => groupOf(r['원소속부서']) === g).length;
+
+  // 직속조직은 정부조직도의 '비서실'처럼 하나의 목록형 박스로 묶어서
+  // 가로 폭을 차지하는 개별 가지를 줄였습니다.
+  const branches = [
+    { type:'list', label:'직속조직', color:groupColor['직속조직'],
+      rows: directTeams.map(t => ({ key:t, label:t, count:orgCounts[t]||0 })) },
+    { type:'group', key:'GRP:해양연구소', label:'해양연구소', color:groupColor['해양연구소'], count:groupTotal('해양연구소'),
+      children: instituteTeams.map(t => ({ key:t, label:t, color:groupColor['해양연구소'], count:orgCounts[t]||0 })) },
+    { type:'group', key:'GRP:SV사업센터', label:'SV사업센터', color:groupColor['SV사업센터'], count:groupTotal('SV사업센터'),
+      children: centerTeams.map(t => ({ key:t, label:t, color:groupColor['SV사업센터'], count:orgCounts[t]||0 })) },
+  ];
+
+  document.getElementById('deptContent').innerHTML = buildOrgChartSvg(branches) +
+    `<div id="deptTooltip" class="flow-tooltip" style="display:none;"></div>`;
+
+  document.getElementById('deptNote').textContent =
+    `총 ${active.length}명 · 박스를 클릭하면 조직장·직급별 명단 표시`;
+}
+
+// 가로형 정부조직도 스타일 SVG를 생성합니다. 말단 팀 박스는 세로쓰기(단일 열),
+// 루트·중간노드(해양연구소/SV사업센터)·직속조직 목록박스는 가로쓰기를 유지합니다.
+// viewBox 기반으로 만들어 카드 폭에 맞게 자동으로 축소/확대됩니다.
+function buildOrgChartSvg(branches){
+  const COL_W = 26, LINE_H = 13, V_PAD = 26;
+  const GAP = 7, GROUP_GAP = 18, LINE = '#98A2B3';
+  const MID_W = 140, MID_H = 42, ROOT_W = 160, ROOT_H = 46;
+  const LIST_W = 122, LIST_HEADER_H = 18, LIST_ROW_H = 20, LIST_PAD = 8;
+
+  // 세로쓰기 박스 치수 — 글자 수만큼 세로로 쌓이며, 폭은 항상 한 열(COL_W)로 고정합니다.
+  // (긴 이름을 억지로 2열로 접으면 줄바꿈 지점이 어색해져서, 대신 박스 높이만 늘립니다.)
+  function leafDims(label){
+    return { w: COL_W, h: label.length*LINE_H + V_PAD };
+  }
+
+  branches.forEach(b => {
+    if(b.type === 'group') b.children.forEach(c => { c.dims = leafDims(c.label); });
+  });
+
+  const slotWidths = branches.map(b => {
+    if(b.type === 'list') return LIST_W;
+    const widths = b.children.map(c => c.dims.w);
+    return widths.reduce((a,w)=>a+w,0) + GAP*(widths.length-1);
+  });
+  const totalW = slotWidths.reduce((a,w)=>a+w,0) + GROUP_GAP*(branches.length-1);
+
+  const centers = [];
+  let cursor = 0;
+  slotWidths.forEach(w => { centers.push(cursor + w/2); cursor += w + GROUP_GAP; });
+  const rootX = (centers[0] + centers[centers.length-1]) / 2;
+
+  const listBranch = branches.find(b => b.type === 'list');
+  const listH = LIST_HEADER_H + LIST_PAD*2 + Math.max(1, listBranch ? listBranch.rows.length : 0) * LIST_ROW_H;
+  const maxL1H = Math.max(MID_H, listH);
+  const allL2Hs = branches.filter(b => b.type === 'group').flatMap(b => b.children.map(c => c.dims.h));
+  const maxL2H = allL2Hs.length ? Math.max(...allL2Hs) : 0;
+
+  const rootTop = 14, l1Top = rootTop + ROOT_H + 30, l2Top = l1Top + maxL1H + 30;
+  const totalH = l2Top + maxL2H + 18;
+
+  let svg = '';
+  const vline = (x,y1,y2) => { svg += `<line x1="${x}" y1="${y1}" x2="${x}" y2="${y2}" stroke="${LINE}" stroke-width="1.4"/>`; };
+  const hline = (x1,x2,y) => { svg += `<line x1="${x1}" y1="${y}" x2="${x2}" y2="${y}" stroke="${LINE}" stroke-width="1.4"/>`; };
+  const elbow = (px, pBottom, childXs, childTop) => {
+    const busY = (pBottom + childTop) / 2;
+    vline(px, pBottom, busY);
+    if(childXs.length > 1) hline(Math.min(...childXs), Math.max(...childXs), busY);
+    childXs.forEach(cx => vline(cx, busY, childTop));
+  };
+
+  function rectBox(cx, top, w, h, key, label, count, fc, tc, ec, vertical, fontSize){
+    const cy = top + h/2;
+    const clickAttr = key ? ` class="org-node" onclick="toggleRosterTooltip(event, '${esc(key)}', '${esc(label)}')" style="cursor:pointer;"` : ' class="org-node"';
+    let textEl;
+    if(vertical){
+      const chars = label.split('');
+      const startY = cy - V_PAD/2 - (chars.length-1)*LINE_H/2 + fontSize/3;
+      textEl = `<text x="${cx}" y="${startY}" text-anchor="middle" font-size="${fontSize}" fill="${tc}">` +
+        chars.map((ch,i) => `<tspan x="${cx}" dy="${i===0?0:LINE_H}">${ch}</tspan>`).join('') + `</text>` +
+        (count != null ? `<text x="${cx}" y="${top+h-9}" text-anchor="middle" font-size="9" font-weight="700" fill="${tc}">${count}명</text>` : '');
+    } else {
+      textEl = `<text x="${cx}" y="${cy - (count!=null?6:0)}" text-anchor="middle" font-size="${fontSize}" font-weight="700" fill="${tc}">${label}</text>` +
+        (count != null ? `<text x="${cx}" y="${cy+12}" text-anchor="middle" font-size="10" fill="${tc}" opacity="0.85">${count}명</text>` : '');
+    }
+    return `<g${clickAttr}>
+      <rect x="${cx-w/2}" y="${top}" width="${w}" height="${h}" rx="4" fill="${fc}" stroke="${ec}" stroke-width="1.6"/>
+      ${textEl}
+    </g>`;
+  }
+
+  // 정부조직도의 '비서실'처럼, 직속조직은 개별 가지 대신 하나의 목록형 박스로 묶어 표시합니다.
+  function listBox(cx, top, w, h, groupLabel, rows, color){
+    let inner = `<rect x="${cx-w/2}" y="${top}" width="${w}" height="${h}" rx="4" fill="white" stroke="${color}" stroke-width="1.6"/>`;
+    inner += `<text x="${cx}" y="${top+LIST_HEADER_H-5}" text-anchor="middle" font-size="11" font-weight="700" fill="#1D2939">${groupLabel}</text>`;
+    inner += `<line x1="${cx-w/2+6}" y1="${top+LIST_HEADER_H}" x2="${cx+w/2-6}" y2="${top+LIST_HEADER_H}" stroke="#E4E7EC" stroke-width="1"/>`;
+    rows.forEach((r,i) => {
+      const ry = top + LIST_HEADER_H + LIST_PAD + i*LIST_ROW_H + LIST_ROW_H/2;
+      inner += `<g class="org-node" style="cursor:pointer;" onclick="toggleRosterTooltip(event, '${esc(r.key)}', '${esc(r.label)}')">
+        <rect x="${cx-w/2+2}" y="${ry-LIST_ROW_H/2+1}" width="${w-4}" height="${LIST_ROW_H-2}" fill="transparent"/>
+        <text x="${cx-w/2+8}" y="${ry+3.5}" font-size="10" fill="#344054">${r.label}</text>
+        <text x="${cx+w/2-8}" y="${ry+3.5}" text-anchor="end" font-size="10" font-weight="700" fill="${color}">${r.count}명</text>
+      </g>`;
+    });
+    return inner;
+  }
+
+  svg += rectBox(rootX, rootTop, ROOT_W, ROOT_H, 'ROOT', '해양사업부장', null, '#1D2939', 'white', '#1D2939', false, 13.5);
+  elbow(rootX, rootTop+ROOT_H, centers, l1Top);
+
+  branches.forEach((b, i) => {
+    const cx = centers[i];
+    if(b.type === 'list'){
+      svg += listBox(cx, l1Top, LIST_W, listH, b.label, b.rows, b.color);
+      return;
+    }
+    svg += rectBox(cx, l1Top, MID_W, MID_H, b.key, b.label, b.count, 'white', '#1D2939', b.color, false, 12);
+    const widths = b.children.map(c => c.dims.w);
+    let x = cx - slotWidths[i]/2;
+    const xs = widths.map(w => { const center = x + w/2; x += w + GAP; return center; });
+    elbow(cx, l1Top+MID_H, xs, l2Top);
+    b.children.forEach((c, j) => {
+      svg += rectBox(xs[j], l2Top, c.dims.w, c.dims.h, c.key, c.label, c.count, 'white', '#1D2939', c.color, true, 10.5);
+    });
+  });
+
+  // width:100%/height:auto로 카드 폭에 맞춰 자동으로 축소·확대됩니다(가로 스크롤 불필요).
+  return `<svg viewBox="0 0 ${totalW} ${totalH}" width="${totalW}" height="${totalH}" style="width:100%;height:auto;display:block;">${svg}</svg>`;
+}
+// key: 'ROOT'(전체), 'GRP:해양연구소'/'GRP:SV사업센터'(조직 전체 합산), 그 외에는 팀명 그대로.
+function getRosterRows(key){
+  const rows = window.__deptAllRows || [];
+  if(key === 'ROOT') return rows;
+  if(key.indexOf('GRP:') === 0){
+    const g = key.slice(4);
+    return rows.filter(r => groupOf(r['원소속부서']) === g);
+  }
+  return rows.filter(r => r['원소속부서'] === key);
+}
+
+// 박스를 클릭하면 조직장(사업부장/연구소장/사업센터장/팀장 등 HEAD_TITLES 전부 포함)과
+// 직급별로 묶은 구성원 명단을 툴팁으로 보여줍니다.
+function toggleRosterTooltip(e, key, label){
+
+  const tip = document.getElementById('deptTooltip');
+  if(!tip) return;
+
+  if(tip.dataset.key === key && tip.style.display !== 'none'){
+    tip.style.display = 'none';
+    tip.dataset.key = '';
+    return;
+  }
+
+  const rows = getRosterRows(key);
+  const headRow = rows.find(r => HEAD_TITLES.includes(r['직책코드명']));
+  const members = rows.filter(r => r !== headRow);
+
+  const groups = {};
+  members.forEach(r => {
+    const g = r['직급명'] || '기타';
+    (groups[g] = groups[g] || []).push(r);
+  });
+  const sortVal = r => isExec(r) ? 99 : parseInt(levelKey(r['직급코드']) || '0', 10);
+  const groupNames = Object.keys(groups).sort((a,b) => {
+    const va = Math.max(...groups[a].map(sortVal));
+    const vb = Math.max(...groups[b].map(sortVal));
+    return vb - va || a.localeCompare(b,'ko');
+  });
+
+  const body = groupNames.map(g => {
+    const list = groups[g].map(r => `<div>${r['성명']}</div>`).join('');
+    return `<div style="font-weight:700;margin-top:6px;">${g} (${groups[g].length}명)</div>${list}`;
+  }).join('');
+
+  tip.innerHTML = `<div style="font-weight:700;margin-bottom:4px;">${label} (${rows.length}명)</div>` +
+    `<div style="color:#475467;margin-bottom:4px;">조직장: ${headRow ? headRow['성명'] + ' (' + headRow['직책코드명'] + ')' : '정보 없음'}</div>` +
+    (body || '<div style="color:#999;">구성원 정보 없음</div>');
+
+  const rect = e.currentTarget.getBoundingClientRect();
+  tip.style.left = (rect.left + window.scrollX) + 'px';
+  tip.style.top = (rect.bottom + window.scrollY + 6) + 'px';
+  tip.style.display = 'block';
+  tip.dataset.key = key;
+}
+
+document.addEventListener('click', function(e){
+  const tip = document.getElementById('deptTooltip');
+  if(!tip) return;
+  if(!tip.contains(e.target) && !e.target.closest('.org-node')){
+    tip.style.display = 'none';
+    tip.dataset.key = '';
+  }
+});
+  
+function renderJobCard(active){
+
+  const counts = {};
+  active.forEach(r => { 
+    const f = isExec(r) ? '임원' : jobFamily(r['직급코드'], r['원소속부서']); 
+    counts[f] = (counts[f]||0)+1; 
+  });
+  const labels = Object.keys(counts);
+  const colors = donutPalette(labels.length);
+  const data = labels.map((label,i) => ({ label, value: counts[label], color: colors[i] }));
+  renderDonut('jobContent', data, '총원(명)');
+  document.getElementById('jobNote').textContent = '직급코드 기준(계약직은 소속부서 기준) · 총 ' + active.length + '명';
+}
+
+function renderEduCard(active){
+  const groups = {};
+  active.forEach(r => {
+    const g = groupOf(r['원소속부서']);
+    const edu = r['최종학력'] || '기타';
+    if(!groups[g]) groups[g] = {};
+    groups[g][edu] = (groups[g][edu]||0) + 1;
+  });
+  const degrees = ['박사','석사','학사'];
+  const groupNames = ['직속조직','SV사업센터','해양연구소'].filter(g => groups[g]);
+  let rows = '<tr><th>조직명</th>' + degrees.map(d=>`<th class="num">${d}</th>`).join('') + '<th class="num">계</th></tr>';
+  const totals = {박사:0,석사:0,학사:0};
+  groupNames.forEach(g => {
+    const gd = groups[g] || {};
+    let sum = 0;
+    rows += `<tr><td>${g}</td>`;
+    degrees.forEach(d => { const v = gd[d]||0; sum += v; totals[d]+=v; rows += `<td class="num">${v}</td>`; });
+    rows += `<td class="num">${sum}</td></tr>`;
+  });
+  const totalSum = degrees.reduce((a,d)=>a+totals[d],0);
+  rows += `<tr class="total"><td>합계</td>${degrees.map(d=>`<td class="num">${totals[d]}</td>`).join('')}<td class="num">${totalSum}</td></tr>`;
+  document.getElementById('eduContent').innerHTML = `<table class="tbl">${rows}</table>`;
+}
+
+function renderDispatchCard(active){
+  const dispatched = active.filter(r => (r['파견조직코드명']||'').trim() !== '');
+  if(dispatched.length === 0){
+    document.getElementById('dispatchContent').innerHTML = '<div class="empty-state">파견 등록 인원이 없습니다</div>';
+    document.getElementById('kpiDispatch').textContent = '0명';
+    document.getElementById('kpiDispatchChip').textContent = '총원 대비 0.0%';
+    document.getElementById('kpiDispatchChip').className = 'chip neutral';
+    return;
+  }
+  const counts = {};
+  const regionPeople = {};
+  dispatched.forEach(r => { 
+   const region = r['파견지역'] || '미기재'; 
+   counts[region] = (counts[region]||0)+1;
+   (regionPeople[region] = regionPeople[region] || []).push({
+     name: r['성명'],
+     reason: r['파견내용'] || '-',
+     dispatchOrg: r['파견조직코드명'],
+     team: r['원소속부서'],
+     position: r['직급명']
+   });
+  });
+  window.__dispatchPeopleMap = regionPeople;
+
+  const labels = Object.keys(counts).sort((a,b)=>counts[b]-counts[a]);
+  const colors = donutPalette(labels.length);
+  const data = labels.map((label,i) => ({ label, value: counts[label], color: colors[i] }));
+  renderDonut('dispatchContent', data, '파견인원(명)');
+  document.getElementById('dispatchNote').textContent = '파견조직코드명 등록 인원 기준 · 조각을 클릭하면 인원 상세 표시';
+
+  document.getElementById('kpiDispatch').textContent = dispatched.length + '명';
+  document.getElementById('kpiDispatchChip').textContent = '총원 대비 ' + (dispatched.length/active.length*100).toFixed(1) + '%';
+  document.getElementById('kpiDispatchChip').className = 'chip up';
+
+  attachDispatchTooltip();
+}
+
+function attachDispatchTooltip(){
+  const svg = document.querySelector('#dispatchContent svg');
+  if(!svg) return;
+  const paths = svg.querySelectorAll('path');
+  const labels = Object.keys(window.__dispatchPeopleMap || {});
+  paths.forEach((path, i) => {
+    const region = labels[i];
+    path.style.cursor = 'pointer';
+    path.addEventListener('click', e => {
+      e.stopPropagation();
+      toggleDispatchTooltip(e,region);
+    });
+  });
+}
+
+function toggleDispatchTooltip(e,region){
+  const tip = document.getElementById('dispatchTooltip');
+  // 같은 조각을 다시 클릭한 경우 닫기
+  if(tip && tip.style.display === 'block' && tip.dataset.region === region){
+    hideDispatchTooltip();
+    return;
+  }
+  showDispatchTooltip(e, region);
+}
+
+function showDispatchTooltip(e, region){
+  let tip = document.getElementById('dispatchTooltip');
+  if(!tip){
+    tip = document.createElement('div')
+    tip.id = 'dispatchTooltip';
+    tip.className = 'flow-tooltip';
+    document.body.appendChild(tip);
+  }
+  const people = (window.__dispatchPeopleMap && window.__dispatchPeopleMap[region]) || [];
+
+  // 원소속부서 기준으로 묶어서 표시합니다.
+  const groups = {};
+  people.forEach(p => { const team = p.team || '미상'; (groups[team] = groups[team] || []).push(p); });
+  const teamNames = Object.keys(groups).sort((a,b) => a.localeCompare(b,'ko'));
+  const body = teamNames.map(team => {
+    const rows = groups[team].map(p =>
+      `<div>${p.name}${p.position ? '(' + p.position + ')' : ''} : ${p.reason} / 파견소속: ${p.dispatchOrg}</div>`
+    ).join('');
+    return `<div style="font-weight:700;margin-top:6px;">${team}</div>${rows}`;
+  }).join('');
+
+  tip.innerHTML = `<div style="font-weight:700;margin-bottom:4px;">${region} (${people.length}명)</div>` + body;
+  tip.dataset.region = region;
+  tip.style.left = (e.pageX + 12) + 'px';
+  tip.style.top = (e.pageY + 12) + 'px';
+  tip.style.display = 'block';
+}
+
+function hideDispatchTooltip(){
+  const tip = document.getElementById('dispatchTooltip');
+  if(tip){
+    tip.style.display = 'none';
+    delete tip.dataset.region;
+  }
+}
+
+/* 4-2b. 사외파견 인원 현황 (4p) — 파견 등록자 중, 파견지역에 본사업장 키워드
+   (서울/구미, "서울특별시"처럼 접미어가 붙어도 포함 매칭)가 들어가지 않는 인원만 추출.
+   지역 → 원소속부서(팀) → 직위 순으로 구역을 나눠 표시하고,
+   기준일(reportDate)로부터 3개월 이내 파견종료 예정 인원은 배지 표시 + 하이라이트합니다. */
+const HQ_SITES = ['서울', '구미'];
+
+function isOffsite(r){
+  const org = (r['파견조직코드명'] || '').trim();
+  const region = (r['파견지역'] || '').trim();
+  if(org === '' || region === '') return false;
+  return !HQ_SITES.some(site => region.includes(site));
+}
+
+function renderOffsiteDispatchCard(active){
+  const offsite = active.filter(isOffsite);
+
+  if(offsite.length === 0){
+    document.getElementById('offsiteContent').innerHTML = '<div class="empty-state">본사업장 외 지역 파견 인원이 없습니다</div>';
+    document.getElementById('offsiteNote').textContent = '본사업장(서울·구미) 외 파견지역 기준 · 총 0명';
+    return;
+  }
+
+  const base = baseDate();
+  const in3m = new Date(base);
+  in3m.setMonth(in3m.getMonth() + 3);
+  const isEndingSoon = r => {
+    const d = parseYMD(r['파견종료예정일']);
+    return d && d >= base && d <= in3m;
+  };
+  const soonCount = offsite.filter(isEndingSoon).length;
+
+  // 지역 → 팀 → 직위 순으로 묶기
+  const byRegion = {};
+  offsite.forEach(r => {
+    const region = (r['파견지역'] || '').trim();
+    const team = r['원소속부서'] || '미상';
+    const pos = r['직급명'] || r['직위코드명'] || '미상';
+    byRegion[region] = byRegion[region] || {};
+    byRegion[region][team] = byRegion[region][team] || {};
+    (byRegion[region][team][pos] = byRegion[region][team][pos] || []).push(r);
+  });
+
+  const regionsHtml = Object.keys(byRegion).sort((a,b) => a.localeCompare(b,'ko')).map(region => {
+    const teams = byRegion[region];
+    const regionCount = Object.values(teams)
+      .reduce((s, posMap) => s + Object.values(posMap).reduce((s2, list) => s2 + list.length, 0), 0);
+
+    const teamsHtml = Object.keys(teams).sort((a,b) => a.localeCompare(b,'ko')).map(team => {
+      const posMap = teams[team];
+      const teamCount = Object.values(posMap).reduce((s, list) => s + list.length, 0);
+
+      const posHtml = Object.keys(posMap).sort((a,b) => a.localeCompare(b,'ko')).map(pos => {
+        const names = posMap[pos].map(r => {
+          const endDate = fmtYMD(parseYMD(r['파견종료예정일']));
+          const label = r['성명'] + (endDate ? `(~${endDate})` : '');
+          return isEndingSoon(r)
+            ? `<span style="background:#E6F7F2;color:#16876F;padding:1px 5px;border-radius:4px;">${label}</span>`
+            : label;
+        }).join(', ');
+        return `<div class="offsite-pos-row"><b>${pos}</b>${names}</div>`;
+      }).join('');
+
+      return `<div class="dept-group-head">${team}<b>${teamCount}명</b></div>${posHtml}`;
+    }).join('');
+
+    return `<div class="offsite-region-head">${region}<b>${regionCount}명</b></div>${teamsHtml}`;
+  }).join('');
+
+  const soonBadge = soonCount
+    ? `<span class="badge" style="background:#E6F7F2;color:#16876F;">3개월 내 파견종료 ${soonCount}명</span>` : '';
+
+  document.getElementById('offsiteContent').innerHTML =
+    (soonBadge ? `<div class="badge-row">${soonBadge}</div>` : '') + regionsHtml;
+
+  document.getElementById('offsiteNote').textContent =
+    `본사업장(서울·구미) 외 파견지역 기준 · 총 ${offsite.length}명`;
+}  
+  
+function renderTenureCards(active){
+  const base = baseDate();
+  function tenureYears(row){
+    const digits = (row['그룹입사일']||'').replace(/[^0-9]/g,'');
+    if(digits.length < 8) return null;
+    const y=+digits.slice(0,4), m=+digits.slice(4,6)-1, d=+digits.slice(6,8);
+    const joined = new Date(y,m,d);
+    if(isNaN(joined.getTime())) return null;
+    return (base - joined) / (1000*60*60*24*365.25);
+  }
+
+  const eligible = active.filter(r => !isExec(r));
+  const tenures = eligible.map(r => ({ row:r, t: tenureYears(r) })).filter(x => x.t !== null);
+
+  // 근속연수별 구간
+  const buckets = { '0~4년':0, '5~9년':0, '10~14년':0, '15~19년':0, '20~24년':0, '25년 이상':0 };
+  tenures.forEach(({t}) => {
+    if(t<5) buckets['0~4년']++;
+    else if(t<10) buckets['5~9년']++;
+    else if(t<15) buckets['10~14년']++;
+    else if(t<20) buckets['15~19년']++;
+    else if(t<25) buckets['20~24년']++;
+    else buckets['25년 이상']++;
+  });
+  const bucketLabels = Object.keys(buckets);
+  const bucketColors = donutPalette(bucketLabels.length);
+  const bucketData = bucketLabels.map((label,i) => ({ label, value: buckets[label], color: bucketColors[i] }));
+  renderDonut('tenureBucketContent', bucketData, '근속연수 구간(명)');
+  document.getElementById('tenureBucketNote').textContent = `그룹입사일 기준 구간 · 총 ${tenures.length}명(임원·고문 제외)`;
+
+  // 팀별 평균 근속연수
+  const teamTenure = {};
+  tenures.forEach(({row,t}) => {
+    const team = row['원소속부서'];
+    if(!teamTenure[team]) teamTenure[team] = [];
+    teamTenure[team].push(t);
+  });
+  const teamData = Object.entries(teamTenure)
+    .map(([label, list]) => ({ label, value: Math.round(list.reduce((a,b)=>a+b,0)/list.length*100)/100 }))
+    .sort((a,b) => b.value - a.value);
+
+  // KPI 및 기준선에 함께 사용할 사업부 평균 근속연수
+  const avg = tenures.length ? tenures.reduce((a,{t})=>a+t,0)/tenures.length : 0;
+  renderBarList('teamTenureContent', teamData, {
+    unit:'년',
+    markValue: Math.round(avg*100)/100,
+    markLabel: `사업부 평균 ${avg.toFixed(2)}년`
+  });
+
+  // KPI: 평균 근속연수
+  document.getElementById('kpiTenure').textContent = avg.toFixed(2) + '년';
+}
+
+/* 4-6. 정년·임금피크 예측 (3p) — 연도별 막대(정년)+꺾은선(임금피크) 복합 차트 */
+function calcWagePeakDate(birth){
+  const turn = new Date(birth.getFullYear()+57, birth.getMonth(), birth.getDate());
+  return new Date(turn.getFullYear(), turn.getMonth()+1, 1);
+}
+function calcRetireDate(birth){
+  const turn = new Date(birth.getFullYear()+60, birth.getMonth(), birth.getDate());
+  return new Date(turn.getFullYear(), turn.getMonth()+1, 0);
+}
+// 근속연수는 팀별 평균 근속연수 카드와 동일하게 그룹입사일 기준으로 계산합니다.
+function groupTenureYears(row, baseDate){
+  const digits = (row['그룹입사일']||'').replace(/[^0-9]/g,'');
+  if(digits.length < 8) return null;
+  const y=+digits.slice(0,4), m=+digits.slice(4,6)-1, d=+digits.slice(6,8);
+  const joined = new Date(y,m,d);
+  if(isNaN(joined.getTime())) return null;
+  return (baseDate - joined) / (1000*60*60*24*365.25);
+}
+
+// 향후 10개 연도(캘린더 연도 기준) 각각에 대해 정년·임금피크 도래 인원을 집계합니다.
+function countRetireYearly(active, baseDate){
+  const startYear = baseDate.getFullYear();
+  const years = Array.from({length:10}, (_,i) => startYear + i);
+  const retireCounts = {}, wagePeakCounts = {}, retirePeople = {}, wagePeakPeople = {};
+  years.forEach(y => { retireCounts[y]=0; wagePeakCounts[y]=0; retirePeople[y]=[]; wagePeakPeople[y]=[]; });
+
+  active.filter(r => !isExec(r)).forEach(row => {
+    const birth = parseYMD(row['법정생년월일']);
+    if(!birth) return;
+    const tenure = groupTenureYears(row, baseDate);
+    const person = { name: row['성명'], org: row['원소속부서'], title: row['직위코드명'] || '-', tenure, birth };
+
+    const wp = calcWagePeakDate(birth);
+    if(wp > baseDate && years.includes(wp.getFullYear())){
+      wagePeakCounts[wp.getFullYear()]++;
+      wagePeakPeople[wp.getFullYear()].push({ ...person, arriveDate: wp });
+    }
+    const rt = calcRetireDate(birth);
+    if(rt > baseDate && years.includes(rt.getFullYear())){
+      retireCounts[rt.getFullYear()]++;
+      retirePeople[rt.getFullYear()].push({ ...person, arriveDate: rt });
+    }
+  });
+  return { years, retireCounts, wagePeakCounts, retirePeople, wagePeakPeople };
+}
+
+function renderRetireForecastCard(active){
+  const base = baseDate();
+  const forecast = countRetireYearly(active, base);
+  window.__retireForecast = forecast;
+
+  document.getElementById('retireForecastContent').innerHTML = buildRetireComboChart(forecast);
+  document.getElementById('retireForecastNote').textContent =
+    `기준일 ${fmtYMD(base)} · 막대=정년(만60세 도달월 말일), 꺾은선=임금피크(만57세 도달월 익월1일) · 임원 제외 · 막대/점 클릭 시 명단 표시`;
+}
+
+function buildRetireComboChart(forecast){
+  const { years, retireCounts, wagePeakCounts } = forecast;
+  const BAR_W = 26, GAP = 22, LEFT = 42, RIGHT = 14, TOP = 14, CHART_H = 130, BOTTOM = 20;
+  const totalW = LEFT + RIGHT + years.length*(BAR_W+GAP) - GAP;
+  const totalH = TOP + CHART_H + BOTTOM;
+
+  const maxVal = Math.max(1, ...years.map(y => Math.max(retireCounts[y], wagePeakCounts[y])));
+  const niceMax = Math.ceil(maxVal/5)*5 || 5;
+  const yOf = v => TOP + CHART_H - (v/niceMax)*CHART_H;
+  const baseline = TOP + CHART_H;
+
+  let svg = '';
+  [0, niceMax/2, niceMax].forEach(v => {
+    const y = yOf(v);
+    svg += `<line x1="${LEFT}" y1="${y}" x2="${totalW-RIGHT}" y2="${y}" stroke="#EEF1F6" stroke-width="1"/>`;
+    svg += `<text x="${LEFT-6}" y="${y+3}" text-anchor="end" font-size="8" fill="#98A2B3">${Math.round(v)}</text>`;
+  });
+
+  const centers = years.map((y,i) => LEFT + i*(BAR_W+GAP) + BAR_W/2);
+
+  years.forEach((y,i) => {
+    const cx = centers[i];
+    const v = retireCounts[y];
+    const h = baseline - yOf(v);
+    svg += `<g class="org-node" style="cursor:pointer;" onclick="toggleRetireTooltip(event,${y},'retire')">
+      <rect x="${cx-BAR_W/2}" y="${yOf(v)}" width="${BAR_W}" height="${h}" rx="3" fill="#2F6FED" opacity="0.85"/>
+      ${v>0 ? `<text x="${cx}" y="${yOf(v)-5}" text-anchor="middle" font-size="8.5" font-weight="700" fill="#2F6FED">${v}</text>` : ''}
+    </g>`;
+  });
+
+  const linePts = years.map((y,i) => `${centers[i]},${yOf(wagePeakCounts[y])}`).join(' ');
+  svg += `<polyline points="${linePts}" fill="none" stroke="#C6431E" stroke-width="1.6"/>`;
+  years.forEach((y,i) => {
+    const cx = centers[i], cy = yOf(wagePeakCounts[y]), v = wagePeakCounts[y];
+    svg += `<g class="org-node" style="cursor:pointer;" onclick="toggleRetireTooltip(event,${y},'wagePeak')">
+      <circle cx="${cx}" cy="${cy}" r="3.2" fill="#C6431E"/>
+      ${v>0 ? `<text x="${cx}" y="${cy-7}" text-anchor="middle" font-size="8.5" font-weight="700" fill="#C6431E">${v}</text>` : ''}
+    </g>`;
+  });
+
+  years.forEach((y,i) => {
+    svg += `<text x="${centers[i]}" y="${baseline+18}" text-anchor="middle" font-size="10" fill="#475467">${y}</text>`;
+  });
+
+  const legend = `
+    <div style="display:flex;gap:12px;font-size:10px;color:#344054;margin-bottom:5px;">
+      <span><i style="display:inline-block;width:10px;height:10px;background:#2F6FED;border-radius:2px;margin-right:4px;"></i>정년 예정(명)</span>
+      <span><i style="display:inline-block;width:10px;height:10px;background:#C6431E;border-radius:50%;margin-right:4px;"></i>임금피크 도래(명)</span>
+    </div>`;
+
+  return legend +
+    `<svg viewBox="0 0 ${totalW} ${totalH}" width="${totalW}" height="${totalH}" style="width:100%;height:auto;display:block;">${svg}</svg>` +
+    `<div id="retireTooltip" class="flow-tooltip" style="display:none;"></div>`;
+}
+
+// 막대(정년) 또는 점(임금피크)을 클릭하면 해당 연도 해당 유형 대상자 명단을 보여줍니다.
+function toggleRetireTooltip(e, year, type){
+  const tip = document.getElementById('retireTooltip');
+  if(!tip) return;
+  const key = year + ':' + type;
+
+  if(tip.dataset.key === key && tip.style.display !== 'none'){
+    tip.style.display = 'none';
+    tip.dataset.key = '';
+    return;
+  }
+
+  const forecast = window.__retireForecast;
+  const people = (type === 'retire' ? forecast.retirePeople[year] : forecast.wagePeakPeople[year]) || [];
+  const typeLabel = type === 'retire' ? '정년' : '임금피크';
+
+  const body = people.length
+    ? people.map(p => `
+        <div style="margin-top:6px;padding-top:6px;border-top:1px dashed var(--border);">
+          <div style="font-weight:700;">${p.name}(${p.org}, ${p.title})</div>
+          <div style="color:var(--mute);font-size:10.5px;">근속연수 ${p.tenure!=null ? p.tenure.toFixed(1)+'년' : '-'} · 생년월일 ${fmtYMD(p.birth)} · ${typeLabel} 도래일 ${fmtYMD(p.arriveDate)}</div>
+        </div>`).join('')
+    : '<div style="color:#999;margin-top:4px;">해당 인원 없음</div>';
+
+  tip.innerHTML = `<div style="font-weight:700;">${year}년 · ${typeLabel} (${people.length}명)</div>` + body;
+
+  const rect = e.currentTarget.getBoundingClientRect();
+  tip.style.left = (rect.left + window.scrollX) + 'px';
+  tip.style.top = (rect.bottom + window.scrollY + 6) + 'px';
+  tip.style.display = 'block';
+  tip.dataset.key = key;
+}
+document.addEventListener('click', function(e){
+  const tip = document.getElementById('retireTooltip');
+  if(!tip) return;
+  if(!tip.contains(e.target) && !e.target.closest('#retireForecastContent svg')){
+    tip.style.display = 'none';
+    tip.dataset.key = '';
+  }
+});
+
+/* 4-7. 계약직 계약현황 (3p) — 직급코드 첫 글자 'G'인 인원만 자동 필터링,
+   계약시작일·계약만료예정일은 명부에 없어 수기 입력 → state.contractDates에 보관 */
+function getContractEmployees(active){
+  return active
+    .filter(r => (r['직급코드']||'').trim().charAt(0) === 'G')
+    .map(r => ({ id: r['사번'], name: r['성명'], org: r['원소속부서'], title: r['직위코드명'] || r['직급명'] || '-' }))
+    .sort((a,b) => a.org.localeCompare(b.org,'ko') || a.name.localeCompare(b.name,'ko'));
+}
+
+function renderContractCard(active){
+  const people = getContractEmployees(active);
+
+  if(people.length === 0){
+    document.getElementById('contractContent').innerHTML = '<div class="empty-state">직급코드 G로 시작하는 계약직 인원이 없습니다</div>';
+    document.getElementById('contractNote').textContent = '총 0명';
+    return;
+  }
+
+  const today = baseDate();
+  const rows = people.map(p => {
+    const saved = state.contractDates[p.id] || {};
+    const endDate = parseYMD(saved.end);
+    const isSoon = endDate && (endDate - today) / (1000*60*60*24) <= 60 && (endDate - today) >= 0;
+    const isPast = endDate && endDate < today;
+    return `<tr${isPast ? ' style="background:#FDEDE8;"' : (isSoon ? ' style="background:#FDF3E7;"' : '')}>
+      <td>${p.name}</td>
+      <td>${p.org}</td>
+      <td>${p.title}</td>
+      <td><input type="date" value="${saved.start || ''}" onchange="onContractDateChange('${esc(p.id)}','start',this.value)" style="font-size:11px;padding:3px;"/></td>
+      <td><input type="date" value="${saved.end || ''}" onchange="onContractDateChange('${esc(p.id)}','end',this.value)" style="font-size:11px;padding:3px;"/></td>
+    </tr>`;
+  }).join('');
+
+  document.getElementById('contractContent').innerHTML = `
+    <table class="tbl">
+      <tr><th>성명</th><th>원소속부서</th><th>직위</th><th>계약시작일</th><th>계약만료예정일</th></tr>
+      ${rows}
+    </table>`;
+
+  const soonCount = people.filter(p => {
+    const d = parseYMD((state.contractDates[p.id]||{}).end);
+    return d && (d - today) / (1000*60*60*24) <= 60 && (d - today) >= 0;
+  }).length;
+  document.getElementById('contractNote').textContent =
+    `총 ${people.length}명(직급코드 G 기준)` + (soonCount ? ` · 60일 이내 만료 ${soonCount}명` : '') + ' · 날짜는 직접 입력, 저장 시 파일에 함께 보관됩니다';
+}
+
+function onContractDateChange(empId, field, value){
+  state.contractDates[empId] = state.contractDates[empId] || {};
+  state.contractDates[empId][field] = value;
+  renderContractCard(state.curr.filter(r => isMarine(r['원소속부서']) && r['재직상태']==='재직'));
+}
+
+/* 4-8. 퇴직자 누적관리 (3p) — 전사명부에 퇴직자가 남지 않아 전량 수기 입력.
+   입사일·퇴직일자를 넣으면 "YY.MM.DD(근속연수 만 X.X년)" 형식으로 자동 표시하고,
+   퇴직연월도 퇴직일자에서 자동 산출합니다. */
+function fmtYYMMDD(dateStr){
+  const d = parseYMD(dateStr);
+  if(!d) return '';
+  const yy = String(d.getFullYear()).slice(-2);
+  const mm = String(d.getMonth()+1).padStart(2,'0');
+  const dd = String(d.getDate()).padStart(2,'0');
+  return `${yy}.${mm}.${dd}`;
+}
+function calcTenureYears(hireStr, resignStr){
+  const hire = parseYMD(hireStr), resign = parseYMD(resignStr);
+  if(!hire || !resign || resign < hire) return null;
+  return (resign - hire) / (1000*60*60*24*365.25);
+}
+function renderRetireeCard(){
+  const rows = state.retirees;
+  document.getElementById('retireeNote').textContent = `총 ${rows.length}명`;
+  document.getElementById('retireeTbody').innerHTML = rows.map((r, i) => {
+    const tenure = calcTenureYears(r.hire, r.resign);
+    const hireDisplay = r.hire
+      ? fmtYYMMDD(r.hire) + (tenure !== null ? `(근속연수 만 ${tenure.toFixed(1)}년)` : '')
+      : '';
+    const resignYM = r.resign ? fmtYYMMDD(r.resign).slice(0,5) : '';
+    return `<tr>
+      <td>${i+1}</td>
+      <td>${resignYM}</td>
+      <td><input value="${esc(r.name||'')}" onchange="onRetireeFieldChange(${i},'name',this.value)" style="width:70px;"/></td>
+      <td><input value="${esc(r.dept||'')}" onchange="onRetireeFieldChange(${i},'dept',this.value)" style="width:90px;"/></td>
+      <td><input value="${esc(r.title||'')}" onchange="onRetireeFieldChange(${i},'title',this.value)" style="width:60px;"/></td>
+      <td>
+        <input type="date" value="${r.hire||''}" onchange="onRetireeFieldChange(${i},'hire',this.value)" style="font-size:11px;"/>
+        <div style="font-size:10.5px;color:var(--mute);">${hireDisplay}</div>
+      </td>
+      <td><input type="date" value="${r.resign||''}" onchange="onRetireeFieldChange(${i},'resign',this.value)" style="font-size:11px;"/></td>
+      <td><input value="${esc(r.edu||'')}" onchange="onRetireeFieldChange(${i},'edu',this.value)" style="width:60px;"/></td>
+      <td><input value="${esc(r.school||'')}" onchange="onRetireeFieldChange(${i},'school',this.value)" style="width:80px;"/></td>
+      <td><input value="${esc(r.major||'')}" onchange="onRetireeFieldChange(${i},'major',this.value)" style="width:80px;"/></td>
+      <td><input value="${esc(r.reason||'')}" onchange="onRetireeFieldChange(${i},'reason',this.value)" style="width:90px;"/></td>
+      <td><input value="${esc(r.dest||'')}" onchange="onRetireeFieldChange(${i},'dest',this.value)" style="width:90px;"/></td>
+      <td>
+        <select onchange="onRetireeFieldChange(${i},'type',this.value)">
+          ${['의원면직','정년퇴직','계약만료'].map(t => `<option value="${t}" ${r.type===t?'selected':''}>${t}</option>`).join('')}
+        </select>
+      </td>
+      <td><button type="button" onclick="removeRetireeRow(${i})" style="color:var(--neg);">삭제</button></td>
+    </tr>`;
+  }).join('');
+}
+function addRetireeRow(){
+  state.retirees.push({ name:'', dept:'', title:'', hire:'', resign:'', edu:'', school:'', major:'', reason:'', dest:'', type:'의원면직' });
+  renderRetireeCard();
+}
+function removeRetireeRow(idx){
+  state.retirees.splice(idx, 1);
+  renderRetireeCard();
+}
+function onRetireeFieldChange(idx, field, value){
+  state.retirees[idx][field] = value;
+  renderRetireeCard();
+}
+  
+/* ===================================================================
+   5. 전월/당월 비교 카드 (인력증감내역 · 발령 변동사항)
+   전사명부를 올렸을 때, 해양사업부 ↔ 타사업부 이동까지 함께 판별합니다.
+   =================================================================== */
+function guessCurrentYearMonth(){
+  const d = baseDate();
+  return String(d.getFullYear()) + String(d.getMonth()+1).padStart(2,'0');
+}
+function classifyNewcomer(row, currentYM){
+  const digits = (row['입사일']||'').replace(/[^0-9]/g,'');
+  const hireYM = digits.length>=6 ? digits.slice(0,6) : null;
+  return (currentYM && hireYM === currentYM) ? '채용' : '전입';
+}
+function classifyLeaver(row){
+  // TODO: 원본에 '이직처'/'퇴사사유' 등 컬럼이 있다면 여기서 퇴직/전출을 구분하도록 조건을 추가하세요.
+  return '퇴직';
+}
+
+function renderComparison(){
+  const prevRows = state.prev, currRows = state.curr;
+  const prevMap = new Map(prevRows.map(r => [r['사번'], r]));
+  const currMap = new Map(currRows.map(r => [r['사번'], r]));
+  const currentYM = guessCurrentYearMonth();
+
+  const flow = { 채용:0, 복직:0, 전입:0, 퇴직:0, 휴직:0, 전출:0 };
+  const flowNames = { 채용:[], 복직:[], 전입:[], 퇴직:[], 휴직:[], 전출:[] };
+  const changeRows = []; // { name, changes: [{type, before, after, tag}, ...] }
+
+  // 당월 명부 기준: 해양사업부 소속만 검사
+  currMap.forEach((row, id) => {
+    if(!isMarine(row['원소속부서'])) return;
+    const prevRow = prevMap.get(id);
+
+    // 전월 명부에 사번 자체가 없음 → 순수 신규채용 또는 (전월 CSV에 없던) 전입
+    if(!prevRow){
+      const type = classifyNewcomer(row, currentYM);
+      flow[type]++;
+      flowNames[type].push({ name: row['성명'], team: row['원소속부서'], position: row['직급명'] });
+      changeRows.push({ name: row['성명'], changes: [{ type: '신규채용', before:'-', after: row['원소속부서'], tag:'hire', position: row['직급명'], org: row['원소속부서'] }] });
+      return;
+    }
+
+    // 전월엔 있었지만 해양사업부가 아니었음 → 타사업부에서 전입
+    const wasMarine = isMarine(prevRow['원소속부서']);
+    if(!wasMarine){
+      flow['전입']++;
+      flowNames['전입'].push({ name: row['성명'], team: row['원소속부서'], position: row['직급명'] });
+      changeRows.push({ name: row['성명'], changes: [{ type:'전입(타사업부)', before: prevRow['원소속부서'], after: row['원소속부서'], tag:'transfer-in', position: prevRow['직급명'], org: row['원소속부서'] }] });
+      return;
+    }
+
+    // 전월에도 해양사업부 소속 → 기존 내부 변동 로직
+    const changes = [];
+    if(prevRow['재직상태']==='재직' && row['재직상태']==='휴직'){
+      flow['휴직']++;
+      flowNames['휴직'].push({ name: row['성명'], team: row['원소속부서'], position: row['직급명'] });
+      changes.push({ type:'휴직', before:'재직', after: row['휴직구분명']||'휴직', tag:'leave', position: prevRow['직급명'], org: row['원소속부서'] });
+    }
+    if(prevRow['재직상태']==='휴직' && row['재직상태']==='재직'){
+      flow['복직']++;
+      flowNames['복직'].push({ name: row['성명'], team: row['원소속부서'], position: row['직급명'] });
+      changes.push({ type:'복직', before:'휴직', after:'재직', tag:'promo', position: prevRow['직급명'], org: row['원소속부서'] });
+    }
+    if(prevRow['원소속부서'] !== row['원소속부서']){
+      changes.push({ type:'전배', before: prevRow['원소속부서'], after: row['원소속부서'], tag:'move', position: prevRow['직급명'] });
+    }
+    if(prevRow['원소속사업장'] !== row['원소속사업장']){
+      changes.push({ type:'사업장이동', before: prevRow['원소속사업장'], after: row['원소속사업장'], tag:'move', position: prevRow['직급명'], org: row['원소속부서'] });
+    }
+    if(prevRow['원소속근무지역'] !== row['원소속근무지역']){
+      changes.push({ type:'근무지이동', before: prevRow['원소속근무지역'], after: row['원소속근무지역'], tag:'move', position: prevRow['직급명'], org: row['원소속부서'] });
+    }
+    if(prevRow['직급명'] !== row['직급명']){
+      changes.push({ type:'직급변동', before: prevRow['직급명'], after: row['직급명'], tag:'promo', position: prevRow['직급명'], org: row['원소속부서'] });
+    }
+    const prevDispatched = (prevRow['파견조직코드명']||'').trim() !== '';
+    const currDispatched = (row['파견조직코드명']||'').trim() !== '';
+    if(!prevDispatched && currDispatched){
+      changes.push({ type:'파견시작', before: prevRow['원소속부서'], after: row['파견조직코드명'], tag:'dispatch', position: row['직급명'], org: row['원소속부서'] });
+    }
+    if(prevDispatched && !currDispatched){
+      changes.push({ type:'파견복귀', before: prevRow['파견조직코드명'], after:'원소속 복귀', tag:'dispatch', position: row['직급명'], org: row['원소속부서'] });
+    }
+    if(changes.length){
+      changeRows.push({ name: row['성명'], changes });
+    }
+  });
+
+  // 전월 명부 기준: 해양사업부였던 사람이 당월에 사라졌거나 타사업부로 이동
+  prevMap.forEach((row, id) => {
+    if(!isMarine(row['원소속부서'])) return;
+    const currRow = currMap.get(id);
+
+    // 당월 명부 자체에 없음 → 완전 퇴직
+    if(!currRow){
+      const type = classifyLeaver(row);
+      flow[type]++;
+      flowNames[type].push({ name: row['성명'], team: row['원소속부서'], position: row['직급명'] });
+      changeRows.push({ name: row['성명'], changes: [{ type, before: row['원소속부서'], after:'-', tag:'retire', position: row['직급명'], org: row['원소속부서'] }] });
+      return;
+    }
+
+    // 당월 명부엔 있지만 해양사업부가 아님 → 타사업부로 전출
+    if(!isMarine(currRow['원소속부서'])){
+      flow['전출']++;
+      flowNames['전출'].push({ name: row['성명'], team: row['원소속부서'], position: row['직급명'] });
+      changeRows.push({ name: row['성명'], changes: [{ type:'전출(타사업부)', before: row['원소속부서'], after: currRow['원소속부서'], tag:'transfer-out', position: row['직급명'], org: row['원소속부서'] }] });
+    }
+  });
+
+  renderFlowCard(prevRows, currRows, flow, flowNames);
+  renderChangeTable(changeRows);
+}
+
+function renderFlowCard(prevRows, currRows, flow, flowNames){
+  const prevCount = prevRows.filter(r => r['재직상태']==='재직' && isMarine(r['원소속부서'])).length;
+  const currCount = currRows.filter(r => r['재직상태']==='재직' && isMarine(r['원소속부서'])).length;
+  const diff = currCount - prevCount;
+
+  window.__flowNameMap = flowNames;
+
+  const signed = { 채용:flow.채용, 복직:flow.복직, 전입:flow.전입, 퇴직:-flow.퇴직, 휴직:-flow.휴직, 전출:-flow.전출 };
+  const cats = Object.keys(signed);
+  const maxAbs = Math.max(1, ...Object.values(signed).map(Math.abs));
+
+  // 감소성 카테고리(퇴직/휴직/전출)는 0이어도 그 색(neg)을 유지해 어떤 항목인지 알 수 있게 합니다.
+  const negCats = ['퇴직','휴직','전출'];
+  const bars = cats.map(c => {
+    const v = signed[c];
+    const isZero = v === 0;
+    const negClass = v < 0 ? ' neg' : '';
+    let fillHtml;
+    if(isZero){
+      // 0명인 경우: 작은 값과 헷갈리지 않도록 막대 대신 바닥에 얇은 색선만 표시합니다.
+      const lineColor = negCats.includes(c) ? 'var(--neg)' : 'var(--c1)';
+      fillHtml = `<div style="width:100%;height:3px;border-radius:2px;background:${lineColor};"></div>`;
+    } else {
+      const pct = Math.max(6, Math.round(Math.abs(v)/maxAbs*100));
+      fillHtml = `<div class="vbar-fill${negClass}" style="height:${pct}%"></div>`;
+    }
+    return `<div class="vbar-col" onclick="toggleFlowTooltip(event, '${c}')" style="cursor:pointer;">
+      <div class="vbar-track">${fillHtml}</div>
+      <div class="vbar-value">${v}</div>
+      <div class="vbar-label">${c}</div>
+    </div>`;
+  }).join('');
+
+  document.getElementById('flowContent').innerHTML = `
+    <div class="miniflow">
+      <div><div class="num">${prevCount}명</div><div class="lab">전월 인원</div></div>
+      <div class="arrow">→</div>
+      <div><div class="num">${currCount}명</div><div class="lab">당월 인원</div></div>
+      <div class="diff chip ${diff>=0?'up':'down'}" style="background:${diff>=0?'#E6F7F2':'#FDEDE8'};color:${diff>=0?'#16876F':'#C6431E'};">${diff>=0?'▲':'▼'} ${Math.abs(diff)}명</div>
+    </div>
+    <div class="vbar-wrap">${bars}</div>
+    <div class="flow-note">채용/전입은 입사일 연월을 기준으로 자동 구분됩니다. 전사명부 업로드 시 타사업부 전입·전출도 함께 집계됩니다.</div>
+    <div id="flowTooltip" class="flow-tooltip" style="display:none;"></div>
+  `;
+}
+
+function toggleFlowTooltip(e, category){
+  const tip = document.getElementById('flowTooltip');
+  const people = (window.__flowNameMap && window.__flowNameMap[category]) || [];
+
+  if(tip.dataset.cat === category && tip.style.display !== 'none'){
+    tip.style.display = 'none';
+    tip.dataset.cat = '';
+    return;
+  }
+
+  // 팀(원소속부서) 기준으로 그룹핑해서 표시
+  const groups = {};
+  people.forEach(p => {
+    const team = p.team || '미상';
+    (groups[team] = groups[team] || []).push(p);
+  });
+  const teamNames = Object.keys(groups).sort((a,b) => a.localeCompare(b,'ko'));
+
+  const body = teamNames.map(team => {
+    const rows = groups[team].map(p => `<div>${p.name}${p.position ? ' / ' + p.position : ''}</div>`).join('');
+    return `<div style="font-weight:700;margin-top:6px;">${team}</div>${rows}`;
+  }).join('');
+
+  tip.innerHTML = `<div style="font-weight:700;margin-bottom:4px;">${category} (${people.length}명)</div>` +
+    (people.length ? body : '<div style="color:#999;">해당 인원 없음</div>');
+
+  const rect = e.currentTarget.getBoundingClientRect();
+  tip.style.left = (rect.left + window.scrollX) + 'px';
+  tip.style.top = (rect.bottom + window.scrollY + 6) + 'px';
+  tip.style.display = 'block';
+  tip.dataset.cat = category;
+}
+document.addEventListener('click', function(e){
+  const tip = document.getElementById('flowTooltip');
+  if(!tip) return;
+  if(!tip.contains(e.target) && !e.target.closest('.vbar-col')){
+    tip.style.display = 'none';
+    tip.dataset.cat = '';
+  }
+});
+
+function renderChangeTable(rows){
+  const totalChanges = rows.reduce((a,r)=>a+r.changes.length,0);
+  document.getElementById('changeNote').textContent = `당월 기준 · ${rows.length}명 · 총 ${totalChanges}건 · 구분을 클릭하면 펼쳐집니다`;
+  document.getElementById('kpiChanges').textContent = totalChanges + '건';
+  document.getElementById('kpiChangesChip').textContent = '전월 대비 변동';
+  document.getElementById('kpiChangesChip').className = 'chip up';
+
+  if(rows.length === 0){
+    document.getElementById('changeContent').innerHTML = '<div class="empty-state">전월 대비 변동 사항이 없습니다</div>';
+    return;
+  }
+
+  // 인원별 목록을 변동 유형 단위로 펼친 뒤, 같은 유형끼리 묶습니다.
+  const flat = [];
+  rows.forEach(r => r.changes.forEach(c => flat.push({ name: r.name, ...c })));
+
+  const groups = {};
+  flat.forEach(c => { (groups[c.type] = groups[c.type] || []).push(c); });
+
+  // 표시 순서: 신규 유입 → 내부 변동 → 파견 → 휴복직 → 유출 순으로 고정하고,
+  // 목록에 없는 유형이 새로 생기면 맨 뒤에 붙입니다.
+  const TYPE_ORDER = ['신규채용','전입(타사업부)','전배','직급변동','사업장이동','근무지이동','파견시작','파견복귀','휴직','복직','전출(타사업부)','퇴직'];
+  const orderedTypes = Object.keys(groups).sort((a, b) => {
+    const ia = TYPE_ORDER.indexOf(a), ib = TYPE_ORDER.indexOf(b);
+    return (ia === -1 ? 999 : ia) - (ib === -1 ? 999 : ib);
+  });
+
+  // 유형별로 접었다 펼 수 있도록 그룹헤더에 화살표를 붙이고, 목록은 기본 접힘 상태로 둡니다.
+  // 인원이 많이 몰리는 달(예: 대규모 신입 채용)에도 헤더만 보이므로 스크롤 부담이 줄어듭니다.
+  const body = orderedTypes.map((type, gi) => {
+    const list = groups[type];
+    const tag = list[0].tag;
+    const gid = 'chg' + gi;
+    const groupHead = `<tr class="chg-group-head" onclick="toggleCollapse('${gid}')" style="cursor:pointer;">
+      <td colspan="2">
+        <span id="arrow-${gid}" style="display:inline-block;margin-right:5px;transition:transform .15s;color:#475467;">▶</span>
+        <span class="tag ${tag}">${type}</span><span class="chg-group-count">${list.length}건</span>
+      </td>
+    </tr>`;
+
+    let groupRows;
+    if(type === '전배'){
+      // 전배는 변경 후(after) 소속팀명 기준으로 한 번 더 묶어서 표시합니다.
+      const byTeam = {};
+      list.forEach(c => { (byTeam[c.after] = byTeam[c.after] || []).push(c); });
+      const teamNames = Object.keys(byTeam).sort((a,b) => a.localeCompare(b,'ko'));
+      groupRows = teamNames.map(team => {
+        const teamHead = `<tr class="grp-${gid}" data-disp="table-row" style="display:none;"><td colspan="2" style="padding-top:10px;padding-bottom:2px;font-weight:700;color:var(--dark);font-size:11.5px;border-bottom:none;">${team}</td></tr>`;
+        const people = byTeam[team].map(c =>
+          `<tr class="grp-${gid}" data-disp="table-row" style="display:none;"><td style="padding-left:8px;">${c.name}${c.position ? ' (' + c.position + ')' : ''}</td><td><span style="color:var(--mute);font-size:11px;">이전: ${c.before}</span></td></tr>`
+        ).join('');
+        return teamHead + people;
+      }).join('');
+    } else {
+      groupRows = list.map(c =>
+        `<tr class="grp-${gid}" data-disp="table-row" style="display:none;">
+          <td>${c.name}<span class="chg-position">${c.position ? ' · ' + c.position : ''}</span>
+            ${c.org ? `<div style="color:var(--mute);font-size:10px;margin-top:2px;">${c.org}</div>` : ''}
+          </td>
+          <td><span class="chg-arrow">${c.before} -> ${c.after}</span></td>
+        </tr>`
+      ).join('');
+    }
+    return groupHead + groupRows;
+  }).join('');
+
+  document.getElementById('changeContent').innerHTML = `
+    <table class="tbl"><tr><th>구분 / 성명</th><th>변동내역</th></tr>${body}</table>
+  `;
+}
+
+// 여러 카드(발령 변동사항 · 부서별 인원현황 · 직급별 인원현황 필터트리)에서
+// 공통으로 쓰는 접기/펴기 토글 함수입니다. 대상 엘리먼트에는 class="grp-{id}"와
+// data-disp(펼쳤을 때 되돌릴 display 값)를 지정해두면 됩니다.
+function toggleCollapse(id){
+  const rows = document.querySelectorAll('.grp-' + id);
+  if(!rows.length) return;
+  const arrow = document.getElementById('arrow-' + id);
+  const showing = rows[0].style.display !== 'none';
+  rows.forEach(el => { el.style.display = showing ? 'none' : (el.dataset.disp || 'block'); });
+  if(arrow) arrow.style.transform = showing ? 'rotate(0deg)' : 'rotate(90deg)';
+}
+
+/* ===================================================================
+   6. 초기화
+   =================================================================== */
+(function init(){
+  const today = new Date();
+  document.getElementById('reportDate').value = today.toISOString().slice(0,10);
+
+  if(window.__EMBEDDED_RETIREES){
+    try { state.retirees = JSON.parse(window.__EMBEDDED_RETIREES); }catch(e){ state.retirees = []; }
+  }
+  renderRetireeCard();
+
+  // 정적 스냅샷 파일(exportSnapshot으로 저장한 결과물)인 경우, 저장 당시의 CSV가
+  // 텍스트로 심어져 있습니다. 새로 열릴 때 이를 다시 불러와 실제로 한 번 더
+  // 렌더링해야, 클릭 시 뜨는 조직장/직급별 명단·인력증감 툴팁 등이 정상 동작합니다.
+  // (단순히 완성된 화면 모양만 복사해두면, 클릭 핸들러가 참조하는 window.__xxx
+  //  전역 데이터가 비어 있어 툴팁이 뜨지 않습니다.)
+  if(window.__EMBEDDED_CURR_CSV){
+    if(window.__EMBEDDED_REPORT_DATE) document.getElementById('reportDate').value = window.__EMBEDDED_REPORT_DATE;
+    if(window.__EMBEDDED_CONTRACT_DATES){
+      try { state.contractDates = JSON.parse(window.__EMBEDDED_CONTRACT_DATES); } catch(e){ state.contractDates = {}; }
+    }
+    state.curr = parseCsvText(window.__EMBEDDED_CURR_CSV);
+    renderAllFromCurrent();
+    if(window.__EMBEDDED_PREV_CSV){
+      state.prev = parseCsvText(window.__EMBEDDED_PREV_CSV);
+      renderComparison();
+    }
+  }
+})();
+
+// 파싱된 행 배열(rows)을 다시 CSV 텍스트로 되돌립니다. exportSnapshot에서
+// 현재 화면에 쓰인 데이터를 그대로 정적 파일 안에 심어둘 때 사용합니다.
+function rowsToCsv(rows){
+  if(!rows || !rows.length) return '';
+  const headers = Object.keys(rows[0]);
+  const escapeCell = v => {
+    const s = String(v ?? '');
+    return /[",\n]/.test(s) ? '"' + s.replace(/"/g,'""') + '"' : s;
+  };
+  const lines = [headers.join(',')];
+  rows.forEach(r => lines.push(headers.map(h => escapeCell(r[h])).join(',')));
+  return lines.join('\n');
+}
+
+/* ===================================================================
+   7. 현재 화면을 별도의 정적 HTML 파일로 저장
+   지금 계산되어 있는 수치와 차트를 그대로 하나의 HTML 파일로 내보냅니다.
+   저장된 파일은 CSV를 다시 올리지 않아도 그 시점의 결과를 그대로 보여줍니다.
+   =================================================================== */
+function exportSnapshot(){
+  if(!state.curr){
+    alert('먼저 당월 명부 CSV를 업로드한 뒤 저장해주세요.');
+    return;
+  }
+  try{
+    const clone = document.documentElement.cloneNode(true);
+    const head = clone.querySelector('head');
+
+    // 지금 화면에 적용된 테마 색상을 고정값으로 저장본에 심어둡니다.
+    const rootStyle = getComputedStyle(document.documentElement);
+    const themeVars = ['--c1','--c2','--c3','--c4','--dark'];
+    const themeTag = document.createElement('style');
+    themeTag.textContent = ':root{' + themeVars.map(v => `${v}:${rootStyle.getPropertyValue(v).trim()};`).join('') + '}';
+    head.appendChild(themeTag);
+
+    // 저장본에서는 업로드/테마 조작 UI가 필요 없으므로 제거합니다.
+    const dataBar = clone.querySelector('.data-bar');
+    if(dataBar) dataBar.remove();
+    const errBanner = clone.querySelector('#uploadErrorBanner');
+    if(errBanner) errBanner.remove();
+    const themePanel = clone.querySelector('.theme-panel');
+    if(themePanel) themePanel.remove();
+
+    // 기준일을 고정 텍스트로 바꿔, 저장본을 열었을 때 오늘 날짜로 리셋되지 않게 합니다.
+    const metaEl = clone.querySelector('.meta');
+    const dateVal = document.getElementById('reportDate').value || today_ISO();
+    if(metaEl) metaEl.innerHTML = '기준일 ' + dateVal + ' (저장 시점 고정)';
+
+    const footer = clone.querySelector('#footerNote');
+    if(footer) footer.textContent = new Date().toLocaleString('ko-KR') + ' 저장된 정적 스냅샷입니다 · 다시 열면 저장 시점 CSV로 자동 재렌더링되며, 클릭 시 명단·툴팁도 정상 동작합니다.';
+
+    // 클릭 시 뜨는 조직장/직급별 명단, 인력증감 툴팁 등은 window.__deptAllRows 같은
+    // 전역 데이터에 의존하는데, 이 값은 CSV를 업로드해서 렌더링해야만 채워집니다.
+    // 정적 스냅샷을 열 때는 업로드 과정이 없으므로, 업로드했던 CSV를 텍스트로 통째로
+    // 심어두고 init()에서 자동으로 같은 렌더링을 한 번 더 돌리도록 합니다.
+    const embeddedScript = document.createElement('script');
+    const currCsv = rowsToCsv(state.curr);
+    const prevCsv = state.prev ? rowsToCsv(state.prev) : '';
+    embeddedScript.textContent =
+      'window.__EMBEDDED_CURR_CSV = ' + JSON.stringify(currCsv) + ';\n' +
+      'window.__EMBEDDED_PREV_CSV = ' + JSON.stringify(prevCsv) + ';\n' +
+      'window.__EMBEDDED_REPORT_DATE = ' + JSON.stringify(dateVal) + ';\n' +
+      'window.__EMBEDDED_CONTRACT_DATES = ' + JSON.stringify(JSON.stringify(state.contractDates || {})) + ';\n' +
+      'window.__EMBEDDED_RETIREES = ' + JSON.stringify(JSON.stringify(state.retirees || [])) + ';';
+    // 본문 스크립트(init 포함)보다 먼저 실행되도록 head에 넣습니다.
+    head.appendChild(embeddedScript);
+
+    const html = '<!DOCTYPE html>\n' + clone.outerHTML;
+    const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    const stamp = dateVal.replace(/-/g,'');
+    a.href = url;
+    a.download = `해양사업부_인력현황_${stamp}.html`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  } catch(err){
+    alert('HTML 저장 중 오류가 발생했습니다: ' + err.message);
+  }
+}
+function today_ISO(){ return new Date().toISOString().slice(0,10); }
+</script>
+
+</body>
+</html>

@@ -372,7 +372,7 @@
 
     <!-- 정년·임금피크 예측 -->
     <div class="card" style="width:100%;">
-      <div class="card-title"><span class="tab" style="background:#7C5FD1"></span><h2>정년·임금피크 예측</h2><span class="note" id="retireForecastNote">법정생년월일 기준</span></div>
+      <div class="card-title"><span class="tab" style="background:#7C5FD1"></span><h2>정년·계약·퇴직 관리</h2><span class="note" id="retireForecastNote">법정생년월일 기준</span></div>
       <div id="retireForecastContent" class="card-body"><div class="empty-state">당월 명부 CSV를 올리면 표시됩니다</div></div>
     </div>
 
@@ -751,7 +751,7 @@ function showPage(n){
   document.getElementById('tabBtn1').classList.toggle('active', n === 1);
   document.getElementById('tabBtn2').classList.toggle('active', n === 2);
   document.getElementById('tabBtn3').classList.toggle('active', n === 3);
-  document.getElementByID('tabBtn4').classList.toggle('active', n === 4);
+  document.getElementById('tabBtn4').classList.toggle('active', n === 4);
 }
 
 /* ===================================================================
@@ -1016,7 +1016,7 @@ function renderDeptCard(active){
       children: centerTeams.map(t => ({ key:t, label:t, color:groupColor['SV사업센터'], count:orgCounts[t]||0 })) },
   ];
 
-  document.getElementById('deptContent').innerHTML = buildOrgChartSvg(branches) +
+  document.getElementById('deptContent').innerHTML = buildOrgChartSvg(branches, active.length) +
     `<div id="deptTooltip" class="flow-tooltip" style="display:none;"></div>`;
 
   document.getElementById('deptNote').textContent =
@@ -1026,7 +1026,7 @@ function renderDeptCard(active){
 // 가로형 정부조직도 스타일 SVG를 생성합니다. 말단 팀 박스는 세로쓰기(단일 열),
 // 루트·중간노드(해양연구소/SV사업센터)·직속조직 목록박스는 가로쓰기를 유지합니다.
 // viewBox 기반으로 만들어 카드 폭에 맞게 자동으로 축소/확대됩니다.
-function buildOrgChartSvg(branches){
+function buildOrgChartSvg(branches, rootTotal){
   const COL_W = 22, LINE_H = 11, V_PAD = 20;
   const GAP = 6, GROUP_GAP = 14, LINE = '#98A2B3';
   const MID_W = 118, MID_H = 36, ROOT_W = 134, ROOT_H = 40;
@@ -1109,7 +1109,7 @@ function buildOrgChartSvg(branches){
     return inner;
   }
 
-  svg += rectBox(rootX, rootTop, ROOT_W, ROOT_H, 'ROOT', '해양사업부장', null, '#1D2939', 'white', '#1D2939', false, 12);
+  svg += rectBox(rootX, rootTop, ROOT_W, ROOT_H, 'ROOT', '해양사업부장', rootTotal, '#1D2939', 'white', '#1D2939', false, 12);
   elbow(rootX, rootTop+ROOT_H, centers, l1Top);
 
   branches.forEach((b, i) => {
@@ -1220,17 +1220,19 @@ function renderEduCard(active){
   });
   const degrees = ['박사','석사','학사'];
   const groupNames = ['직속조직','SV사업센터','해양연구소'].filter(g => groups[g]);
+  const pctCell = (v,base) => base ? `${v}<br><span style="font-size:9px;color:var(--mute);">${(v/base*100).toFixed(1)}%</span>` : `${v}`;
+  
   let rows = '<tr><th>조직명</th>' + degrees.map(d=>`<th class="num">${d}</th>`).join('') + '<th class="num">계</th></tr>';
   const totals = {박사:0,석사:0,학사:0};
   groupNames.forEach(g => {
     const gd = groups[g] || {};
-    let sum = 0;
+    const sum = degrees.reduce((a,d)=>a+(gs[d]||0),0);
     rows += `<tr><td>${g}</td>`;
-    degrees.forEach(d => { const v = gd[d]||0; sum += v; totals[d]+=v; rows += `<td class="num">${v}</td>`; });
+    degrees.forEach(d => { const v = gd[d]||0; totals[d]+=v; rows += `<td class="num">${pctCell(v,sum)}</td>`; });
     rows += `<td class="num">${sum}</td></tr>`;
   });
   const totalSum = degrees.reduce((a,d)=>a+totals[d],0);
-  rows += `<tr class="total"><td>합계</td>${degrees.map(d=>`<td class="num">${totals[d]}</td>`).join('')}<td class="num">${totalSum}</td></tr>`;
+  rows += `<tr class="total"><td>합계</td>${degrees.map(d=>`<td class="num">${pctCell(totals[d], totalSum)}</td>`).join('')}<td class="num">${totalSum}</td></tr>`;
   document.getElementById('eduContent').innerHTML = `<table class="tbl">${rows}</table>`;
 }
 
@@ -1241,6 +1243,7 @@ function renderDispatchCard(active){
     document.getElementById('kpiDispatch').textContent = '0명';
     document.getElementById('kpiDispatchChip').textContent = '총원 대비 0.0%';
     document.getElementById('kpiDispatchChip').className = 'chip neutral';
+    document.getElementById('dispatchNote').textContent = '파견 총원 0명';
     return;
   }
   const counts = {};
@@ -1262,7 +1265,7 @@ function renderDispatchCard(active){
   const colors = donutPalette(labels.length);
   const data = labels.map((label,i) => ({ label, value: counts[label], color: colors[i] }));
   renderDonut('dispatchContent', data, '파견인원(명)');
-  document.getElementById('dispatchNote').textContent = '파견조직코드명 등록 인원 기준 · 조각을 클릭하면 인원 상세 표시';
+  document.getElementById('dispatchNote').textContent = '파견 총원 ${dispatched.length}명/조각 클릭 시 파견사항 표시';
 
   document.getElementById('kpiDispatch').textContent = dispatched.length + '명';
   document.getElementById('kpiDispatchChip').textContent = '총원 대비 ' + (dispatched.length/active.length*100).toFixed(1) + '%';
@@ -1816,7 +1819,7 @@ function guessCurrentYearMonth(){
   return String(d.getFullYear()) + String(d.getMonth()+1).padStart(2,'0');
 }
 function classifyNewcomer(row, currentYM){
-  const digits = (row['입사일']||'').replace(/[^0-9]/g,'');
+  const digits = (row['그룹입사일']||'').replace(/[^0-9]/g,'');
   const hireYM = digits.length>=6 ? digits.slice(0,6) : null;
   return (currentYM && hireYM === currentYM) ? '채용' : '전입';
 }

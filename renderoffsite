@@ -1,0 +1,70 @@
+function renderOffsiteDispatchCard(active){
+  window.__offsiteActiveRows = active;
+  const offsite = active.filter(isOffsite);
+
+  if(offsite.length === 0){
+    document.getElementById('offsiteContent').innerHTML = '<div class="empty-state">본사업장 외 지역 파견 인원이 없습니다</div>';
+    document.getElementById('offsiteNote').textContent = '본사업장(서울·구미) 외 파견지역 기준 · 총 0명';
+    return;
+  }
+
+  const base = baseDate();
+  const in3m = new Date(base);
+  in3m.setMonth(in3m.getMonth() + 3);
+  const isEndingSoon = r => {
+    const d = parseYMD(r['파견종료예정일']);
+    return d && d >= base && d <= in3m;
+  };
+  const soonCount = offsite.filter(isEndingSoon).length;
+
+  const byBiz = {};
+  offsite.forEach(r => {
+    const biz = classifyDispatchBusiness(r['파견내용']);
+    const team = r['원소속부서'] || '미상';
+    byBiz[biz] = byBiz[biz] || {};
+    (byBiz[biz][team] = byBiz[biz][team] || []).push(r);
+  });
+
+  const bizHtml = Object.keys(byBiz).sort((a,b) => a.localeCompare(b,'ko')).map(biz => {
+    const teams = byBiz[biz];
+    const bizCount = Object.values(teams).reduce((s, list) => s + list.length, 0);
+
+    const teamsHtml = Object.keys(teams).sort((a,b) => a.localeCompare(b,'ko')).map(team => {
+      const list = teams[team];
+      const rowsHtml = list.map(r => {
+        const id = r['사번'];
+        const startVal = state.dispatchStart[id] || '';
+        const endDate = parseYMD(r['파견종료예정일']);
+        const startDate = parseYMD(startVal);
+        const period = (startDate && endDate)
+          ? `${fmtYMD(startDate)}~${fmtYMD(endDate)} (약 ${Math.max(1, Math.round((endDate-startDate)/(1000*60*60*24*30.44)))}개월)`
+          : `~${fmtYMD(endDate)}`;
+        const nameLabel = r['성명'] + (r['직급명'] ? `(${r['직급명']})` : '');
+        return `<div class="offsite-pos-row"${isEndingSoon(r) ? ' style="background:#E6F7F2;"' : ''}>
+          <b>${nameLabel}</b>
+          <input type="text" inputmode="numeric" maxlength="8" placeholder="파견시작일 YYYYMMDD" value="${startVal}"
+            onchange="onDispatchStartChange('${esc(id)}', this.value)"
+            style="font-size:11.5px;padding:3px 5px;width:98px;margin:0 6px;"/>
+          <span>${period}</span>
+        </div>`;
+      }).join('');
+      return `<div class="dept-group-head">${team}<b>${list.length}명</b></div>${rowsHtml}`;
+    }).join('');
+
+    return `<div class="offsite-region-head">${biz}<b>${bizCount}명</b></div>${teamsHtml}`;
+  }).join('');
+
+  const soonBadge = soonCount
+    ? `<span class="badge" style="background:#E6F7F2;color:#16876F;">3개월 내 파견종료 ${soonCount}명</span>`
+    : `<span class="badge" style="background:#F2F4F7;color:#667085;">3개월 내 파견종료 해당없음</span>`;
+
+  document.getElementById('offsiteContent').innerHTML = `<div class="badge-row">${soonBadge}</div>` + bizHtml;
+
+  document.getElementById('offsiteNote').textContent =
+    `본사업장(서울·구미) 외 파견지역 기준 · 총 ${offsite.length}명 · 파견내용(사업) 기준 그룹핑`;
+}
+
+function onDispatchStartChange(empId, value){
+  state.dispatchStart[empId] = value;
+  renderOffsiteDispatchCard(window.__offsiteActiveRows || []);
+}

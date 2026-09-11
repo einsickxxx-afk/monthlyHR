@@ -1751,7 +1751,7 @@ document.addEventListener('click', function(e){
 });
 
 /* 4-7. 계약직 계약현황 (3p) — 직급코드 첫 글자 'G'인 인원만 자동 필터링,
-   계약시작일·계약만료예정일은 명부에 없어 수기 입력 → state.contractDates에 보관 */
+   계약유형·계약시작일·계약만료예정일은 명부에 없어 수기 입력 → state.contractDates에 보관 */
 function getContractEmployees(active){
   return active
     .filter(r => (r['직급코드']||'').trim().charAt(0) === 'G')
@@ -1772,11 +1772,17 @@ function renderContractCard(active){
 
   const today = baseDate();
   const in3m = new Date(today); in3m.setMonth(in3m.getMonth() + 3);
+  const CONTRACT_TYPES = ['프로젝트계약직','일반계약직','전문계약직','특수계약직','기타계약유형'];
   const rows = people.map(p => {
     const saved = state.contractDates[p.id] || {};
     const endDate = parseYMD(saved.end);
     const isSoon = endDate && endDate >= today && endDate <= in3m;
     const isPast = endDate && endDate < today;
+    const typeCell = readOnly ? (saved.type || '-') :
+      `<select onchange="onContractTypeChange('${esc(p.id)}',this.value)" style="font-size:12.5px;padding:5px 6px;">
+        <option value="">선택</option>
+        ${CONTRACT_TYPES.map(t => `<option value="${t}" ${saved.type===t?'selected':''}>${t}</option>`).join('')}
+      </select>`;
     const startCell = readOnly ? (saved.start ? fmtYYMMDD(saved.start) : '-') :
       `<input type="text" inputmode="numeric" maxlength="8" placeholder="YYYYMMDD" value="${saved.start || ''}" onchange="onContractDateChange('${esc(p.id)}','start',this.value)" style="font-size:12.5px;padding:5px 6px;width:76px;"/>
        <span id="contractStartPreview_${p.id}" style="display:block;font-size:10px;color:var(--mute);margin-top:2px;">${saved.start ? fmtYYMMDD(saved.start) : ''}</span>`;
@@ -1787,6 +1793,7 @@ function renderContractCard(active){
       <td>${p.name}</td>
       <td>${p.org}</td>
       <td>${p.title}</td>
+      <td>${typeCell}</td>
       <td>${startCell}</td>
       <td>${endCell}</td>
     </tr>`;
@@ -1800,7 +1807,7 @@ function renderContractCard(active){
 
   document.getElementById('contractContent').innerHTML = `<div id="contractBadgeRow">${soonBadge}</div>` + `
     <table class="tbl">
-      <tr><th>성명</th><th>원소속부서</th><th>직위</th><th>계약시작일</th><th>계약만료예정일</th></tr>
+      <tr><th>성명</th><th>원소속부서</th><th>직위</th><th>계약유형</th><th>계약시작일</th><th>계약만료예정일</th></tr>
       ${rows}
     </table>`;
 
@@ -1837,6 +1844,11 @@ function onContractDateChange(empId, field, value){
   }
 }
 
+function onContractTypeChange(empId, value){
+  state.contractDates[empId] = state.contractDates[empId] || {};
+  state.contractDates[empId].type = value;
+}
+  
 /* 4-8. 퇴직자 누적관리 (3p) — 전사명부에 퇴직자가 남지 않아 전량 수기 입력.
    입사일·퇴직일자를 넣으면 "YY.MM.DD(근속연수 만 X.X년)" 형식으로 자동 표시하고,
    퇴직연월도 퇴직일자에서 자동 산출합니다. */
@@ -2316,7 +2328,7 @@ function exportSnapshot(){
       const isSoon = endDate && endDate >= todayForExport && endDate <= in3mForExport;
       const isPast = endDate && endDate < todayForExport;
       return `<tr${isPast ? ' style="background:#FDEDE8;"' : (isSoon ? ' style="background:#FDF3E7;"' : '')}>
-        <td>${p.name}</td><td>${p.org}</td><td>${p.title}</td>
+        <td>${p.name}</td><td>${p.org}</td><td>${p.title}</td><td>${saved.type || '-'}</td>
         <td>${saved.start ? fmtYYMMDD(saved.start) : '-'}</td><td>${saved.end ? fmtYYMMDD(saved.end) : '-'}</td>
       </tr>`;
     }).join('');
@@ -2329,7 +2341,7 @@ function exportSnapshot(){
     if(contractContentEl){
       contractContentEl.innerHTML = contractPeople.length === 0
         ? '<div class="empty-state">계약직 인원이 없습니다</div>'
-        : contractSoonBadge + `<table class="tbl"><tr><th>성명</th><th>원소속부서</th><th>직위</th><th>계약시작일</th><th>계약만료예정일</th></tr>${contractRowsHtml}</table>`;
+        : contractSoonBadge + `<table class="tbl"><tr><th>성명</th><th>원소속부서</th><th>직위</th><th>계약유형</th><th>계약시작일</th><th>계약만료예정일</th></tr>${contractRowsHtml}</table>`;
     }
     const contractNoteEl = clone.querySelector('#contractNote');
     if(contractNoteEl) contractNoteEl.textContent = `총 ${contractPeople.length}명(직급코드 G 기준)`;

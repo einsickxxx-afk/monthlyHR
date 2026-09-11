@@ -308,7 +308,7 @@
 
     <!-- 인원 검색 -->
     <div class="card" style="width:100%;">
-      <div class="card-title"><span class="tab"></span><h2>인원 검색</h2><span class="note">이름으로 간략 인사카드 조회</span></div>
+      <div class="card-title"><span class="tab"></span><h2>인원 검색</h2><span class="note">인사정보 조회</span></div>
       <div class="card-body">
         <div style="display:flex;gap:8px;margin-bottom:10px;">
           <input type="text" id="empSearchInput" placeholder="이름 입력 후 Enter" style="flex:1;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px;" onkeydown="if(event.key==='Enter') searchEmployee()">
@@ -348,7 +348,7 @@
 
     <!-- 조직별 학력사항 -->
     <div class="card w-half">
-      <div class="card-title"><span class="tab" style="background:var(--pos)"></span><h2>조직별 학력사항</h2><span class="note">조직 × 최종학력</span></div>
+      <div class="card-title"><span class="tab" style="background:var(--pos)"></span><h2>조직별 학력사항</h2><span class="note">조직별 최종학력사항</span></div>
       <div id="eduContent" class="card-body"><div class="empty-state">당월 명부 CSV를 올리면 표시됩니다</div></div>
     </div>
 
@@ -360,7 +360,7 @@
 
     <!-- 팀별 평균 근속 연수 -->
     <div class="card w-half">
-      <div class="card-title"><span class="tab"></span><h2>팀별 평균 근속 연수</h2><span class="note">그룹입사일 기준 · 임원 제외</span></div>
+      <div class="card-title"><span class="tab"></span><h2>팀별 평균 근속 연수</h2><span class="note">그룹입사일 기준, 임원 제외</span></div>
       <div id="teamTenureContent" class="card-body"><div class="empty-state">당월 명부 CSV를 올리면 표시됩니다</div></div>
     </div>
 
@@ -397,7 +397,7 @@
 
     <!-- 정년·임금피크 예측 -->
     <div class="card" style="width:100%;">
-      <div class="card-title"><span class="tab" style="background:#7C5FD1"></span><h2>정년·임금피크 예측</h2><span class="note" id="retireForecastNote">법정생년월일 기준</span></div>
+      <div class="card-title"><span class="tab" style="background:#7C5FD1"></span><h2>정년 및 임금피크 시기 예측</h2><span class="note" id="retireForecastNote">법정생년월일 기준</span></div>
       <div id="retireForecastContent" class="card-body"><div class="empty-state">당월 명부 CSV를 올리면 표시됩니다</div></div>
     </div>
 
@@ -439,7 +439,7 @@
     </div>
     </div><!-- /page4 -->
   
-  <div class="footer" id="footerNote">CSV를 업로드하면 이 대시보드의 모든 수치가 자동 계산됩니다 · 색상 테마는 상단 패널에서 변경 가능</div>
+  <div class="footer" id="footerNote">당월 명부 기준으로 자동 확인되는 수치이며, 일부 데이터의 경우 수기입력됩니다.</div>
 
 <script>
 /* ===================================================================
@@ -867,7 +867,7 @@ function renderLeaveCard(leaveRows){
       <tr><th>성명</th><th>원소속부서</th><th>직위</th><th>휴직구분</th><th>휴직일</th><th>복직예정일</th></tr>
       ${body}
     </table>`;
-  document.getElementById('leaveNote').textContent = `총 ${rows.length}명 · 복직예정일 임박순 정렬`;
+  document.getElementById('leaveNote').textContent = `총 ${rows.length}명(복직예정일 임박순)`;
 }
 
 /* ===================================================================
@@ -1302,7 +1302,7 @@ function renderJobCard(active){
   const colors = donutPalette(labels.length);
   const data = labels.map((label,i) => ({ label, value: counts[label], color: colors[i] }));
   renderDonut('jobContent', data, '총원(명)');
-  document.getElementById('jobNote').textContent = '직급코드 기준(계약직은 소속부서 기준) · 총 ' + active.length + '명';
+  document.getElementById('jobNote').textContent = '직급코드 기준(계약직은 소속부서 기준) 총 ' + active.length + '명';
 }
 
 function renderEduCard(active){
@@ -2104,7 +2104,7 @@ function renderFlowCard(prevRows, currRows, flow, flowNames){
       <div class="diff chip ${diff>=0?'up':'down'}" style="background:${diff>=0?'#E6F7F2':'#FDEDE8'};color:${diff>=0?'#16876F':'#C6431E'};">${diff>=0?'▲':'▼'} ${Math.abs(diff)}명</div>
     </div>
     <div class="vbar-wrap">${bars}</div>
-    <div class="flow-note">채용/전입은 입사일 연월을 기준으로 자동 구분됩니다. 전사명부 업로드 시 타사업부 전입·전출도 함께 집계됩니다.</div>
+    <div class="flow-note">채용/전입은 입사일 연월을 기준으로 자동 구분됩니다.</div>
     <div id="flowTooltip" class="flow-tooltip" style="display:none;"></div>
   `;
 }
@@ -2152,7 +2152,7 @@ document.addEventListener('click', function(e){
 
 function renderChangeTable(rows){
   const totalChanges = rows.reduce((a,r)=>a+r.changes.length,0);
-  document.getElementById('changeNote').textContent = `당월 기준 · ${rows.length}명 · 총 ${totalChanges}건 · 구분을 클릭하면 펼쳐집니다`;
+  document.getElementById('changeNote').textContent = `당월 기준 ${rows.length}명, 총 ${totalChanges}건. 구분을 클릭하면 펼쳐집니다`;
   document.getElementById('kpiChanges').textContent = totalChanges + '건';
   document.getElementById('kpiChangesChip').textContent = '전월 대비 변동';
   document.getElementById('kpiChangesChip').className = 'chip up';
@@ -2379,7 +2379,7 @@ function exportSnapshot(){
     }
       
     const footer = clone.querySelector('#footerNote');
-    if(footer) footer.textContent = new Date().toLocaleString('ko-KR') + ' 저장된 정적 스냅샷입니다 · 다시 열면 저장 시점 CSV로 자동 재렌더링되며, 클릭 시 명단·툴팁도 정상 동작합니다.';
+    if(footer) footer.textContent = new Date().toLocaleString('ko-KR') + ' 저장된 내용입니다. 다시 열면 저장 시점 CSV로 재렌더링되며, 클릭 시 툴팁도 정상 동작합니다.';
 
     // 클릭 시 뜨는 조직장/직급별 명단, 인력증감 툴팁 등은 window.__deptAllRows 같은
     // 전역 데이터에 의존하는데, 이 값은 CSV를 업로드해서 렌더링해야만 채워집니다.
